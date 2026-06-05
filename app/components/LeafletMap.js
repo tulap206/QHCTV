@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 
-export default function LeafletMap({ collaborators, onSelectCollaborator }) {
+export default function LeafletMap({ collaborators, onSelectCollaborator, onMapClick }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -42,6 +42,13 @@ export default function LeafletMap({ collaborators, onSelectCollaborator }) {
         });
 
         mapRef.current = map;
+
+        // Register custom map click listener
+        map.on('click', (e) => {
+          if (onMapClick) {
+            onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });
+          }
+        });
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

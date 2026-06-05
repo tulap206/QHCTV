@@ -67,6 +67,29 @@ const getCompetenceBadge = (comp) => {
   );
 };
 
+const getClassificationBadge = (cls) => {
+  const c = String(cls || "CSBM").trim();
+  let bg = "#F8FAFC", color = "#1E293B", border = "#CBD5E1";
+  if (c === "CSBM" || c === "CS") {
+    bg = "#EFF6FF"; color = "#2563EB"; border = "#BFDBFE";
+  } else if (c === "ĐT1") {
+    bg = "#FEF2F2"; color = "#DC2626"; border = "#FECACA";
+  } else if (c === "ĐT2") {
+    bg = "#FFFBEB"; color = "#D97706"; border = "#FDE68A";
+  } else if (c === "ĐT3") {
+    bg = "#EEF2FF"; color = "#4F46E5"; border = "#C7D2FE";
+  } else if (c === "CTVDD" || c === "DD") {
+    bg = "#F0FDF4"; color = "#0D9488"; border = "#99F6E4";
+  } else if (c === "HTBM" || c === "HT") {
+    bg = "#ECFEFF"; color = "#0891B2"; border = "#A5F3FC";
+  }
+  return (
+    <span style={{ background: bg, color: color, border: `1px solid ${border}`, padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
+      {c}
+    </span>
+  );
+};
+
 const HUE_WARRENTS = [
   "Phường Thuận Hoà",
   "Phường Phú Xuân",
@@ -446,9 +469,7 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
                         <div style={{ fontSize: 10, color: "#94A3B8" }}>{item.ma_so}</div>
                       </td>
                       <td style={{ padding: "10px 16px", textAlign: "center" }}>
-                        <span style={{ background: "#F1F5F9", color: "#475569", border: "1px solid #CBD5E1", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
-                          {item.classification}
-                        </span>
+                        {getClassificationBadge(item.classification)}
                       </td>
                       <td style={{ padding: "10px 16px", fontSize: 13, color: "#334155" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
@@ -797,6 +818,33 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
     ghi_chu: ""
   });
 
+  const [geocoding, setGeocoding] = useState(false);
+  const [showPickerMap, setShowPickerMap] = useState(false);
+
+  const handleGeocode = async (addr) => {
+    if (!addr || !addr.trim()) return;
+    setGeocoding(true);
+    try {
+      const query = encodeURIComponent(addr.trim() + ", Thừa Thiên Huế, Việt Nam");
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        setForm(prev => ({
+          ...prev,
+          lat: String(parseFloat(lat).toFixed(6)),
+          lng: String(parseFloat(lon).toFixed(6))
+        }));
+      } else {
+        console.warn("Không tự động tìm thấy tọa độ cho địa chỉ: " + addr);
+      }
+    } catch (e) {
+      console.error("Geocoding fetch error:", e);
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
   useEffect(() => {
     if (item) {
       setForm({
@@ -851,14 +899,13 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <FormField label="Mã CTV (Quy hoạch)" required>
+        <FormField label="Mã CTV (Quy hoạch - Tự động)" required>
           <input 
             name="ma_so" 
             value={form.ma_so} 
-            onChange={handleChange} 
-            required 
-            style={inputSt} 
-            placeholder="Ví dụ: CTV-2026-001" 
+            readOnly
+            style={{ ...inputSt, background: "#F1F5F9", color: "#64748B", cursor: "not-allowed" }} 
+            placeholder="Tự động phát sinh..." 
           />
         </FormField>
         
@@ -900,14 +947,38 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
       </div>
 
       <FormField label="Địa chỉ địa bàn hoạt động" required>
-        <input 
-          name="address" 
-          value={form.address} 
-          onChange={handleChange} 
-          required 
-          style={inputSt} 
-          placeholder="Ví dụ: Cổng chính Chợ Đông Ba, Huế" 
-        />
+        <div style={{ display: "flex", gap: 8 }}>
+          <input 
+            name="address" 
+            value={form.address} 
+            onChange={handleChange} 
+            onBlur={(e) => handleGeocode(e.target.value)}
+            required 
+            style={{ ...inputSt, flex: 1 }} 
+            placeholder="Ví dụ: Cổng chính Chợ Đông Ba, Huế (Nhập xong click ra ngoài để tự tìm tọa độ)" 
+          />
+          <button
+            type="button"
+            onClick={() => setShowPickerMap(true)}
+            style={{
+              padding: "9px 16px",
+              background: "#EFF6FF",
+              color: "#2563EB",
+              border: "1px solid #BFDBFE",
+              borderRadius: 8,
+              cursor: "pointer",
+              fontSize: 12,
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              whiteSpace: "nowrap"
+            }}
+          >
+            📍 Ghim bản đồ
+          </button>
+        </div>
+        {geocoding && <div style={{ fontSize: 11, color: "#2563EB", marginTop: 4 }}>⏳ Đang tìm kiếm tọa độ tự động...</div>}
       </FormField>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr", gap: 10 }}>
@@ -1044,6 +1115,49 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
           Lưu hồ sơ
         </button>
       </div>
+
+      {showPickerMap && (
+        <Modal
+          title="📍 Nhấp vào bản đồ để chọn tọa độ vị trí"
+          onClose={() => setShowPickerMap(false)}
+          wide
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ fontSize: 13, color: "#475569" }}>
+              Nhấp chuột vào bất cứ điểm nào trên bản đồ dưới đây để ghim tọa độ. Tọa độ hiện tại: <b>Lat: {form.lat} · Lng: {form.lng}</b>
+            </div>
+            <div style={{ height: "400px", width: "100%", borderRadius: "16px", overflow: "hidden" }}>
+              <LeafletMap 
+                collaborators={[{ 
+                  id: 9999, 
+                  ma_so: form.ma_so, 
+                  nickname: form.nickname || "Vị trí chọn", 
+                  address: form.address, 
+                  lat: parseFloat(form.lat) || 16.4637, 
+                  lng: parseFloat(form.lng) || 107.5909,
+                  status: "hoat_dong" 
+                }]} 
+                onMapClick={(coords) => {
+                  setForm(prev => ({
+                    ...prev,
+                    lat: String(coords.lat.toFixed(6)),
+                    lng: String(coords.lng.toFixed(6))
+                  }));
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
+              <button
+                type="button"
+                onClick={() => setShowPickerMap(false)}
+                style={{ padding: "8px 16px", background: "linear-gradient(135deg,#0F172A,#1E293B)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 700 }}
+              >
+                Xác nhận tọa độ
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </form>
   );
 }
