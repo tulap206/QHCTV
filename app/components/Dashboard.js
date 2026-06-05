@@ -134,6 +134,101 @@ function LineChart({ data, classifications, colors }) {
   );
 }
 
+function OfficerStackedBarChart({ data, classifications, colors }) {
+  const height = 220;
+  const width = 800;
+  const paddingLeft = 40;
+  const paddingRight = 20;
+  const paddingTop = 30;
+  const paddingBottom = 30;
+  const plotWidth = width - paddingLeft - paddingRight;
+  const plotHeight = height - paddingTop - paddingBottom;
+
+  const maxVal = Math.max(1, ...data.map(d => d.total));
+  // Round up maxVal to even number if > 1
+  const maxAxisVal = maxVal > 1 ? Math.ceil(maxVal / 2) * 2 : 1;
+
+  const yTicks = Array.from({ length: 5 }, (_, i) => (maxAxisVal / 4) * i);
+
+  return (
+    <div style={{ width: '100%' }}>
+      {/* Legend */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginBottom: 16, fontSize: 11, fontWeight: 700 }}>
+        {classifications.map(cls => (
+          <div key={cls} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: colors[cls] }} />
+            <span style={{ color: '#64748B' }}>{cls}</span>
+          </div>
+        ))}
+      </div>
+
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} style={{ overflow: 'visible' }}>
+        {/* Y-axis Ticks and Gridlines */}
+        {yTicks.map((tick, idx) => {
+          const y = paddingTop + plotHeight * (1 - tick / maxAxisVal);
+          return (
+            <g key={idx}>
+              <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#F1F5F9" strokeWidth="1" strokeDasharray="3 3" />
+              <text x={paddingLeft - 8} y={y + 4} textAnchor="end" fontSize="10" fontWeight="600" fill="#94A3B8">{Math.round(tick)}</text>
+            </g>
+          );
+        })}
+
+        {/* Stacked Bars */}
+        {data.map((d, i) => {
+          const barWidth = Math.min(24, plotWidth / data.length - 12);
+          const colX = paddingLeft + (i / data.length) * plotWidth + (plotWidth / data.length - barWidth) / 2;
+          const startY = paddingTop + plotHeight;
+
+          let currentY = startY;
+          const lastName = d.name.trim().split(' ').slice(-1)[0] || '';
+
+          return (
+            <g key={i}>
+              <title>{`${d.name}: Tổng ${d.total} CTV`}</title>
+              
+              {/* Background slot */}
+              <rect x={colX} y={paddingTop} width={barWidth} height={plotHeight} fill="#F8FAFC" rx="4" opacity="0.4" />
+
+              {/* Render stacked sections */}
+              {classifications.map(cls => {
+                const count = d.counts[cls] || 0;
+                if (count === 0) return null;
+                const segHeight = (count / maxAxisVal) * plotHeight;
+                const yPos = currentY - segHeight;
+                currentY = yPos; // update for next stack segment
+
+                return (
+                  <rect 
+                    key={cls}
+                    x={colX} 
+                    y={yPos} 
+                    width={barWidth} 
+                    height={segHeight} 
+                    fill={colors[cls]} 
+                    rx="2"
+                  />
+                );
+              })}
+
+              {/* Total label */}
+              {d.total > 0 && (
+                <text x={colX + barWidth / 2} y={currentY - 6} textAnchor="middle" fontSize="10" fontWeight="800" fill="#1E293B">{d.total}</text>
+              )}
+
+              {/* Officer name label */}
+              <text x={colX + barWidth / 2} y={startY + 16} textAnchor="middle" fontSize="10" fontWeight="700" fill="#64748B">{lastName}</text>
+            </g>
+          );
+        })}
+        {data.length === 0 && (
+          <text x={width / 2} y={height / 2} textAnchor="middle" fontSize="13" fontStyle="italic" fill="#94A3B8">Chưa có dữ liệu phân công cán bộ</text>
+        )}
+      </svg>
+    </div>
+  );
+}
+
 /* ─────────────────────────────────────────────
    MAIN DASHBOARD COMPONENT
    ───────────────────────────────────────────── */
@@ -231,6 +326,32 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
 
     return monthlyData;
   }, [ctvList]);
+
+  // Officer stats data (CTVs managed by each officer, sorted descending, max 10)
+  const officerStatsData = useMemo(() => {
+    const classifications = ["CSBM", "ĐT1", "ĐT2", "ĐT3", "CTVDD", "HTBM"];
+    return (users || []).filter(u => u.role !== 'viewer').map(u => {
+      const uCtvs = ctvList.filter(c => c.managing_officer === u.name);
+      
+      const counts = { CSBM: 0, ĐT1: 0, ĐT2: 0, ĐT3: 0, CTVDD: 0, HTBM: 0 };
+      uCtvs.forEach(c => {
+        let cls = c.classification || "CSBM";
+        if (cls === "CS") cls = "CSBM";
+        if (cls === "DD") cls = "CTVDD";
+        if (cls === "HT") cls = "HTBM";
+        if (counts[cls] !== undefined) counts[cls]++;
+      });
+
+      return {
+        name: u.name,
+        counts,
+        total: uCtvs.length
+      };
+    })
+    .filter(u => u.total > 0)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 10);
+  }, [users, ctvList]);
 
   const card = (extra = {}) => ({
     background: '#fff', 
@@ -350,6 +471,23 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
         <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>📈 Tiến độ xây dựng CTV theo thời gian (12 Tháng)</div>
         <LineChart 
           data={lineChartData} 
+          classifications={["CSBM", "ĐT1", "ĐT2", "ĐT3", "CTVDD", "HTBM"]} 
+          colors={{
+            "CSBM": '#2563EB',
+            "ĐT1": '#DC2626',
+            "ĐT2": '#D97706',
+            "ĐT3": '#4F46E5',
+            "CTVDD": '#0D9488',
+            "HTBM": '#0891B2'
+          }} 
+        />
+      </div>
+
+      {/* Stacked Bar Chart for Officer managing load by Classification */}
+      <div style={{ ...card({ padding: 20 }), marginBottom: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>👥 Thống kê số lượng CTV theo Cán bộ quản lý (Top 10)</div>
+        <OfficerStackedBarChart 
+          data={officerStatsData} 
           classifications={["CSBM", "ĐT1", "ĐT2", "ĐT3", "CTVDD", "HTBM"]} 
           colors={{
             "CSBM": '#2563EB',
