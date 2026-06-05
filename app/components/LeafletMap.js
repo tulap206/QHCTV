@@ -8,13 +8,17 @@ export default function LeafletMap({ collaborators, onSelectCollaborator }) {
   const markersRef = useRef([]);
   const circlesRef = useRef([]);
   const [zoomLevel, setZoomLevel] = useState(14);
+  const [leafletInstance, setLeafletInstance] = useState(null);
 
+  // 1. Initialize Map ONCE on mount
   useEffect(() => {
-    // Check if we are in browser environment
     if (typeof window === 'undefined') return;
 
-    // Ensure Leaflet is loaded
+    let map = null;
+
     import('leaflet').then((L) => {
+      setLeafletInstance(L);
+
       // Fix default Leaflet icon paths
       delete L.Icon.Default.prototype._getIconUrl;
       L.Icon.Default.mergeOptions({
@@ -23,54 +27,46 @@ export default function LeafletMap({ collaborators, onSelectCollaborator }) {
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
       });
 
-      // If map is already initialized, clear it
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
+      if (mapContainerRef.current) {
+        map = L.map(mapContainerRef.current, {
+          center: [16.4637, 107.5909],
+          zoom: 14,
+          zoomControl: true,
+          scrollWheelZoom: true
+        });
+
+        mapRef.current = map;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Track zoom changes to toggle radar circles
+        map.on('zoomend', () => {
+          setZoomLevel(map.getZoom());
+        });
+
+        // Invalidate size after map renders to avoid grey/broken tiles layout issues
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 300);
       }
-
-      // Initialize Map centering at Hue City
-      const map = L.map(mapContainerRef.current, {
-        center: [16.4637, 107.5909],
-        zoom: 14,
-        zoomControl: true,
-        scrollWheelZoom: true
-      });
-
-      mapRef.current = map;
-
-      // Add OpenStreetMap tiles
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(map);
-
-      // Track zoom changes to toggle radar circles
-      map.on('zoomend', () => {
-        setZoomLevel(map.getZoom());
-      });
-
-      renderMarkers(L, map);
     });
 
     return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
+      if (map) {
+        map.remove();
         mapRef.current = null;
       }
     };
-  }, [collaborators]);
+  }, []);
 
-  // Re-render markers/circles when zoom level or collaborators list changes
+  // 2. Render and update markers whenever collaborators or map zoom level changes
   useEffect(() => {
-    if (!mapRef.current) return;
-    
-    // Import Leaflet again to get access to L inside the update effect
-    import('leaflet').then((L) => {
-      updateRadarCircles(L, mapRef.current);
-    });
-  }, [zoomLevel, collaborators]);
+    if (!mapRef.current || !leafletInstance) return;
+    const L = leafletInstance;
+    const map = mapRef.current;
 
-  const renderMarkers = (L, map) => {
     // Clear old markers
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
@@ -83,8 +79,6 @@ export default function LeafletMap({ collaborators, onSelectCollaborator }) {
 
     collaborators.forEach(ctv => {
       const position = [ctv.lat, ctv.lng];
-
-      // Custom marker icon using HTML/CSS for styled dots
       const activeColor = ctv.status === "hoat_dong" || !ctv.status ? "#22C55E" : (ctv.status === "tam_khoa" ? "#F59E0B" : "#EF4444");
       
       const customIcon = L.divIcon({
@@ -112,10 +106,9 @@ export default function LeafletMap({ collaborators, onSelectCollaborator }) {
         iconAnchor: [10, 10]
       });
 
-      // 1. Draw collaborator marker
+      // Draw marker
       const marker = L.marker(position, { icon: customIcon }).addTo(map);
       
-      // Hover hovercard tooltip
       const tooltipContent = `
         <div style="font-family: inherit; padding: 2px;">
           <div style="font-weight: 800; color: #1E293B; font-size: 13px;">${ctv.nickname}</div>
@@ -133,7 +126,6 @@ export default function LeafletMap({ collaborators, onSelectCollaborator }) {
         className: 'leaflet-custom-tooltip'
       });
 
-      // Onclick event callback to open detail view
       marker.on('click', () => {
         if (onSelectCollaborator) {
           onSelectCollaborator(ctv);
@@ -142,7 +134,7 @@ export default function LeafletMap({ collaborators, onSelectCollaborator }) {
 
       markersRef.current.push(marker);
 
-      // 2. Draw radar coverage circle (if zoom is close enough >= 15)
+      // Draw radar circle
       const radius = ctv.coverage_radius || 500;
       const radarCircle = L.circle(position, {
         radius: radius,
@@ -154,32 +146,17 @@ export default function LeafletMap({ collaborators, onSelectCollaborator }) {
         className: 'radar-scanning-circle'
       });
 
-      if (map.getZoom() >= 15) {
+      if (zoomLevel >= 15) {
         radarCircle.addTo(map);
       }
 
-      circlesRef.current.push({
-        circle: radarCircle,
-        ctvId: ctv.id
-      });
+      circlesRef.current.push(radarCircle);
     });
-  };
 
-  const updateRadarCircles = (L, map) => {
-    const currentZoom = map.getZoom();
-    
-    circlesRef.current.forEach(({ circle }) => {
-      if (currentZoom >= 15) {
-        if (!map.hasLayer(circle)) {
-          circle.addTo(map);
-        }
-      } else {
-        if (map.hasLayer(circle)) {
-          circle.remove();
-        }
-      }
-    });
-  };
+    // Invalidate size on change to maintain correct mapping container coordinates
+    map.invalidateSize();
+
+  }, [collaborators, zoomLevel, leafletInstance]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '450px' }}>
@@ -198,15 +175,15 @@ export default function LeafletMap({ collaborators, onSelectCollaborator }) {
         /* Pulse Animation for Radar Scanning Circle */
         @keyframes pulse-radar {
           0% {
-            stroke-width: 2px;
+            stroke-width: 1.5px;
             opacity: 0.8;
           }
           50% {
-            stroke-width: 4px;
-            opacity: 0.4;
+            stroke-width: 3.5px;
+            opacity: 0.45;
           }
           100% {
-            stroke-width: 2px;
+            stroke-width: 1.5px;
             opacity: 0.8;
           }
         }
