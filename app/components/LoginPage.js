@@ -132,7 +132,10 @@ export default function LoginPage({ onLogin }) {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(160deg,#0A0F1E 0%,#0F1F3D 40%,#1a0a0a 80%,#0A0F1E 100%)",
+      backgroundImage: "linear-gradient(rgba(10,15,30,0.55), rgba(10,15,30,0.65)), url('/images/login_bg.png')",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -141,10 +144,6 @@ export default function LoginPage({ onLogin }) {
       overflow: "hidden",
       padding: "20px 16px"
     }}>
-      {/* Decorative background circles */}
-      <div style={{ position: "absolute", top: -120, right: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle,rgba(200,16,46,0.18) 0%,transparent 70%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: -100, left: -60, width: 350, height: 350, borderRadius: "50%", background: "radial-gradient(circle,rgba(30,58,120,0.25) 0%,transparent 70%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", top: "40%", left: "15%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle,rgba(255,215,0,0.06) 0%,transparent 70%)", pointerEvents: "none" }} />
 
       {/* Main card */}
       <div style={{
