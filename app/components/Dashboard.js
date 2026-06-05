@@ -330,8 +330,22 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
   // Officer stats data (CTVs managed by each officer, sorted descending, max 10)
   const officerStatsData = useMemo(() => {
     const classifications = ["CSBM", "ĐT1", "ĐT2", "ĐT3", "CTVDD", "HTBM"];
-    return (users || []).filter(u => u.role !== 'viewer').map(u => {
-      const uCtvs = ctvList.filter(c => c.managing_officer === u.name);
+    
+    // Group by unique name to avoid duplicates (e.g. if 'admin' and 'pltlap' have the same display name)
+    const uniqueNames = new Set();
+    const activeOfficers = [];
+    (users || []).forEach(u => {
+      if (u.role !== 'viewer' && u.name) {
+        const normalizedName = u.name.trim();
+        if (!uniqueNames.has(normalizedName)) {
+          uniqueNames.add(normalizedName);
+          activeOfficers.push(normalizedName);
+        }
+      }
+    });
+
+    return activeOfficers.map(name => {
+      const uCtvs = ctvList.filter(c => c.managing_officer === name);
       
       const counts = { CSBM: 0, ĐT1: 0, ĐT2: 0, ĐT3: 0, CTVDD: 0, HTBM: 0 };
       uCtvs.forEach(c => {
@@ -343,7 +357,7 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
       });
 
       return {
-        name: u.name,
+        name,
         counts,
         total: uCtvs.length
       };
