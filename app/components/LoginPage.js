@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { LogoImg } from './LogoImg';
+import Image from 'next/image';
 
 export default function LoginPage({ onLogin }) {
   const [un, setUn] = useState("");
@@ -132,10 +133,7 @@ export default function LoginPage({ onLogin }) {
   return (
     <div style={{
       minHeight: "100vh",
-      backgroundImage: "linear-gradient(rgba(10,15,30,0.55), rgba(10,15,30,0.65)), url('/images/login_bg.png')",
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      backgroundRepeat: "no-repeat",
+      background: "#0A0F1E",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -144,6 +142,44 @@ export default function LoginPage({ onLogin }) {
       overflow: "hidden",
       padding: "20px 16px"
     }}>
+      {/* Dynamic Background Image with Zoom effect */}
+      <div 
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 0,
+          animation: "zoomBackground 40s ease-in-out infinite alternate",
+          overflow: "hidden"
+        }}
+      >
+        <Image
+          src="/images/login_bg.png"
+          alt="Quy hoạch CTV"
+          fill
+          priority
+          sizes="100vw"
+          quality={85}
+          style={{
+            objectFit: 'cover',
+            objectPosition: 'center',
+          }}
+        />
+      </div>
+      {/* Background radial gradient overlay to maintain high contrast/readability */}
+      <div 
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "radial-gradient(circle, rgba(10,15,30,0.68) 0%, rgba(10,15,30,0.85) 100%)",
+          zIndex: 0
+        }}
+      />
 
       {/* Main card */}
       <div style={{

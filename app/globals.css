@@ -66,3 +66,13 @@ button:active { transform:scale(0.97) !important; }
   border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
+/* Background image zoom effect for login page */
+@keyframes zoomBackground {
+  0% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1.08);
+  }
+}
+
