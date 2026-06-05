@@ -237,7 +237,7 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
     
     let nd;
     if (editItem) {
-      nd = cur.map((i) => i.id === editItem.id ? { ...f, id: editItem.id } : i);
+      nd = cur.map((i) => i.id === editItem.id ? { ...i, ...f, id: editItem.id } : i);
       addLog(`Cập nhật cộng tác viên: ${f.nickname}`, "collaborators");
     } else {
       const id = Math.max(0, ...cur.map((i) => i.id || 0)) + 1;
