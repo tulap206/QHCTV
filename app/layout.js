@@ -7,7 +7,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "QHCTV - Hệ thống quản lý Cộng tác viên",
+  title: "PC02App - Quản lý quy hoạch CTV",
   description: "Hệ thống quản lý thông tin, địa bàn, tọa độ và quy hoạch Cộng tác viên Công an Thành phố Huế",
   icons: {
     icon: "/favicon.ico",

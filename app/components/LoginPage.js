@@ -341,7 +341,7 @@ export default function LoginPage({ onLogin }) {
         </div>
         <div style={{ color: "rgba(255,255,255,0.18)", fontSize: 10.5, fontStyle: "italic", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
           <span>✦</span>
-          <span>✦ Phan Lê Tự Lập - 0967611112 ✦</span>
+          <span>Phan Lê Tự Lập - 0967611112</span>
           <span>✦</span>
         </div>
       </div>
