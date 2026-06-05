@@ -90,6 +90,10 @@ export default function LeafletMap({ collaborators, onSelectCollaborator, onMapC
 
     if (!collaborators || collaborators.length === 0) return;
 
+    if (collaborators.length === 1) {
+      map.panTo([collaborators[0].lat, collaborators[0].lng]);
+    }
+
     collaborators.forEach(ctv => {
       const position = [ctv.lat, ctv.lng];
       const activeColor = ctv.status === "hoat_dong" || !ctv.status ? "#22C55E" : (ctv.status === "tam_khoa" ? "#F59E0B" : "#EF4444");

@@ -663,7 +663,7 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
               </div>
               <div>
                 <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Biệt danh (Nickname):</span>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#1E293B" }}>{ctvDetailPopup.nickname}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#DC2626" }}>{ctvDetailPopup.nickname}</div>
               </div>
               <div>
                 <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Phân loại CTV:</span>
@@ -857,6 +857,33 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
 
   const [geocoding, setGeocoding] = useState(false);
   const [showPickerMap, setShowPickerMap] = useState(false);
+  const [mapSearch, setMapSearch] = useState("");
+  const [mapSearching, setMapSearching] = useState(false);
+
+  const handleMapSearch = async () => {
+    if (!mapSearch || !mapSearch.trim()) return;
+    setMapSearching(true);
+    try {
+      const query = encodeURIComponent(mapSearch.trim() + ", Thừa Thiên Huế, Việt Nam");
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        setForm(prev => ({
+          ...prev,
+          lat: String(parseFloat(lat).toFixed(6)),
+          lng: String(parseFloat(lon).toFixed(6))
+        }));
+      } else {
+        alert("Không tìm thấy địa điểm này. Vui lòng thử lại với từ khóa khác!");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Lỗi kết nối khi tìm kiếm địa chỉ.");
+    } finally {
+      setMapSearching(false);
+    }
+  };
 
   const handleGeocode = async (addr) => {
     if (!addr || !addr.trim()) return;
@@ -1178,6 +1205,26 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
             <div style={{ fontSize: 13, color: "#475569" }}>
               Nhấp chuột vào bất cứ điểm nào trên bản đồ dưới đây để ghim tọa độ. Tọa độ hiện tại: <b>Lat: {form.lat} · Lng: {form.lng}</b>
             </div>
+            
+            <div style={{ display: "flex", gap: 8 }}>
+              <input 
+                type="text"
+                value={mapSearch}
+                onChange={(e) => setMapSearch(e.target.value)}
+                placeholder="Tìm nhanh địa chỉ trên bản đồ (VD: Chợ Đông Ba, Huế)..."
+                onKeyDown={(e) => e.key === 'Enter' && handleMapSearch()}
+                style={{ flex: 1, padding: "8px 12px", border: "1px solid #CBD5E1", borderRadius: 8, fontSize: 13, outline: "none" }}
+              />
+              <button
+                type="button"
+                onClick={handleMapSearch}
+                disabled={mapSearching}
+                style={{ padding: "8px 16px", background: "#2563EB", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 700, fontSize: 13 }}
+              >
+                {mapSearching ? "Đang tìm..." : "Tìm kiếm"}
+              </button>
+            </div>
+
             <div style={{ height: "400px", width: "100%", borderRadius: "16px", overflow: "hidden" }}>
               <LeafletMap 
                 collaborators={[{ 
