@@ -145,7 +145,8 @@ export default function LeafletMap({ collaborators, onSelectCollaborator, onMapC
         <div style="font-family: inherit; padding: 2px;">
           <div style="font-weight: 800; color: #1E293B; font-size: 13px;">${ctv.nickname}</div>
           <div style="font-size: 10px; color: #64748B; margin-bottom: 4px;">Mã: ${ctv.ma_so}</div>
-          <div style="font-size: 11px; color: #334155;">📍 <b>Địa bàn:</b> ${ctv.address}</div>
+          <div style="font-size: 11px; color: #334155; margin-bottom: 2px;">🏷️ <b>Phân loại:</b> ${ctv.classification || "CSBM"}</div>
+          <div style="font-size: 11px; color: #334155; margin-bottom: 2px;">📍 <b>Địa bàn:</b> ${ctv.address}</div>
           <div style="font-size: 11px; color: #334155;">👮 <b>Cán bộ phụ trách:</b> ${ctv.managing_officer || "—"}</div>
         </div>
       `;

@@ -10,6 +10,34 @@ const LeafletMap = dynamic(
   { ssr: false, loading: () => <div style={{ height: "450px", display: "flex", alignItems: "center", justifyContent: "center", background: "#F1F5F9", borderRadius: "16px", color: "#64748B" }}>Đang tải bản đồ quy hoạch...</div> }
 );
 
+const getCompetenceBadge = (comp) => {
+  const c = String(comp || "Khá").trim();
+  let bg = "#F1F5F9", color = "#475569", border = "#CBD5E1";
+  if (c === "Xuất sắc") {
+    bg = "#F5F3FF"; color = "#7C3AED"; border = "#DDD6FE";
+  } else if (c === "Tốt") {
+    bg = "#EFF6FF"; color = "#2563EB"; border = "#BFDBFE";
+  } else if (c === "Khá") {
+    bg = "#FFFBEB"; color = "#D97706"; border = "#FDE68A";
+  } else if (c === "Kém") {
+    bg = "#FEF2F2"; color = "#DC2626"; border = "#FECACA";
+  }
+  return (
+    <span style={{ background: bg, color: color, border: `1px solid ${border}`, padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
+      {c}
+    </span>
+  );
+};
+
+const formatVNdate = (dStr) => {
+  if (!dStr) return "";
+  try {
+    const parts = dStr.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  } catch (e) {}
+  return dStr;
+};
+
 /* ─────────────────────────────────────────────
    MINI SVG CHARTS (Offline compatible, pure CSS styling)
    ───────────────────────────────────────────── */
@@ -517,7 +545,7 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
       {/* Map Click Details popup card modal */}
       {selectedMapCtv && (
         <Modal 
-          title="CHI TIẾT HỒ SƠ QUY HOẠCH CTV" 
+          title="CHI TIẾT HỒ SƠ CỘNG TÁC VIÊN" 
           onClose={() => setSelectedMapCtv(null)}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -528,10 +556,14 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
               </div>
               <div>
                 <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Biệt danh (Nickname):</span>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#1E293B" }}>{selectedMapCtv.nickname}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#DC2626" }}>{selectedMapCtv.nickname}</div>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Địa bàn hoạt động:</span>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Phân loại CTV:</span>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#1D4ED8" }}>{selectedMapCtv.classification}</div>
+              </div>
+              <div>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Địa chỉ hoạt động:</span>
                 <div style={{ fontSize: 14, color: "#334155" }}>{selectedMapCtv.address}</div>
               </div>
               <div>
@@ -539,15 +571,15 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
                 <div style={{ fontSize: 14, color: "#334155" }}>{selectedMapCtv.phone || "—"}</div>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Tọa độ GPS:</span>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Vị trí địa lý (Tọa độ):</span>
                 <div style={{ fontSize: 13, color: "#334155" }}>Lat: {selectedMapCtv.lat} · Lng: {selectedMapCtv.lng}</div>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Bán kính bảo vệ:</span>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Bán kính radar quét:</span>
                 <div style={{ fontSize: 13, color: "#334155" }}>{selectedMapCtv.coverage_radius} m</div>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Trạng thái:</span>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Trạng thái hoạt động:</span>
                 <div>
                   <span style={{ 
                     background: selectedMapCtv.status === "hoat_dong" || !selectedMapCtv.status ? "#DCFCE7" : (selectedMapCtv.status === "tam_khoa" ? "#FEF3C7" : "#FEF2F2"), 
@@ -559,14 +591,38 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
                 </div>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Cán bộ phụ trách:</span>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Năng lực:</span>
+                <div style={{ marginTop: 4 }}>{getCompetenceBadge(selectedMapCtv.competence)}</div>
+              </div>
+              <div>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Thời gian xây dựng:</span>
+                <div style={{ fontSize: 14, color: "#334155", fontWeight: 600 }}>{selectedMapCtv.created_date ? formatVNdate(selectedMapCtv.created_date) : "—"}</div>
+              </div>
+              <div>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Cán bộ quản lý:</span>
                 <div style={{ fontSize: 14, color: "#334155", fontWeight: 600 }}>{selectedMapCtv.managing_officer || "—"}</div>
+              </div>
+              <div style={{ gridColumn: isMobile ? "auto" : "span 2" }}>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Khu vực hoạt động:</span>
+                <div style={{ fontSize: 14, color: "#334155", fontWeight: 600, marginTop: 2 }}>{selectedMapCtv.khu_vuc_hoat_dong || "—"}</div>
+              </div>
+              <div style={{ gridColumn: isMobile ? "auto" : "span 2" }}>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Giao nhiệm vụ:</span>
+                <div style={{ fontSize: 13, color: "#475569", background: "#F8FAFC", border: "1px solid #E2E8F0", padding: "10px 14px", borderRadius: 8, whiteSpace: "pre-wrap", marginTop: 4 }}>
+                  {selectedMapCtv.giao_nhiem_vu || "—"}
+                </div>
+              </div>
+              <div style={{ gridColumn: isMobile ? "auto" : "span 2" }}>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Kết quả thực hiện:</span>
+                <div style={{ fontSize: 13, color: "#475569", background: "#F8FAFC", border: "1px solid #E2E8F0", padding: "10px 14px", borderRadius: 8, whiteSpace: "pre-wrap", marginTop: 4 }}>
+                  {selectedMapCtv.ket_qua || "—"}
+                </div>
               </div>
             </div>
             
             {selectedMapCtv.ghi_chu && (
               <div>
-                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Mô tả chi tiết / Ghi chú:</span>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Ghi chú nghiệp vụ:</span>
                 <div style={{ fontSize: 13, color: "#475569", background: "#F8FAFC", border: "1px solid #E2E8F0", padding: "10px 14px", borderRadius: 8, whiteSpace: "pre-wrap", marginTop: 4 }}>
                   {selectedMapCtv.ghi_chu}
                 </div>
