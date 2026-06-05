@@ -28,10 +28,15 @@ export default function LeafletMap({ collaborators, onSelectCollaborator }) {
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
       });
 
+      const centerCoords = (collaborators && collaborators.length === 1) 
+        ? [collaborators[0].lat, collaborators[0].lng] 
+        : [16.4637, 107.5909];
+      const initialZoom = (collaborators && collaborators.length === 1) ? 16 : 14;
+
       if (mapContainerRef.current) {
         map = L.map(mapContainerRef.current, {
-          center: [16.4637, 107.5909],
-          zoom: 14,
+          center: centerCoords,
+          zoom: initialZoom,
           zoomControl: true,
           scrollWheelZoom: true
         });
