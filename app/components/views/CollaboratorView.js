@@ -428,29 +428,29 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
                           ● {badgeText}
                         </span>
                       </td>
-                      <td style={{ padding: "10px 16px", textAlign: "center" }}>
-                        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                      <td style={{ padding: "8px 6px", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "flex", gap: 3, justifyContent: "center", flexWrap: "nowrap" }}>
                           <button 
-                            onClick={() => setCtvDetailPopup(item)}
-                            style={{ border: "none", background: "none", color: "#3B82F6", cursor: "pointer", fontSize: 12, fontWeight: 700 }}
+                            onClick={() => setCtvDetailPopup(item)} 
+                            style={{ border: "none", background: "#F1F5F9", color: "#475569", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 10, fontWeight: 600, whiteSpace: "nowrap" }}
                           >
-                            Chi tiết
+                            Xem
                           </button>
                           {canEdit(item) && (
                             <button 
                               onClick={() => {
                                 setEditItem(item);
                                 setShowModal(true);
-                              }}
-                              style={{ border: "none", background: "none", color: "#D97706", cursor: "pointer", fontSize: 12, fontWeight: 700 }}
+                              }} 
+                              style={{ border: "none", background: "#FFFBEB", color: "#B45309", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 10, fontWeight: 600, whiteSpace: "nowrap" }}
                             >
                               Sửa
                             </button>
                           )}
                           {canDelete(item) && (
                             <button 
-                              onClick={() => handleDelete(item)}
-                              style={{ border: "none", background: "none", color: "#DC2626", cursor: "pointer", fontSize: 12, fontWeight: 700 }}
+                              onClick={() => handleDelete(item)} 
+                              style={{ border: "none", background: "#FFF5F5", color: "#DC2626", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 10, fontWeight: 600, whiteSpace: "nowrap" }}
                             >
                               Xóa
                             </button>
