@@ -5,10 +5,10 @@ import { supabase } from '@/lib/supabaseClient';
 import { LogoImg } from './LogoImg';
 
 export default function LoginPage({ onLogin }) {
-  const [un, setUn] = useState("admin");
-  const [pw, setPw] = useState("Admin@123");
+  const [un, setUn] = useState("");
+  const [pw, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [remember, setRemember] = useState(true);
+  const [remember, setRemember] = useState(false);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState("");
@@ -29,7 +29,7 @@ export default function LoginPage({ onLogin }) {
       const saved = sessionStorage.getItem("login_remember");
       if (saved) {
         const d = JSON.parse(saved);
-        setUn(d.un || "admin");
+        setUn(d.un || "");
         setRemember(true);
       }
     } catch (e) {}
