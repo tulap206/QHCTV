@@ -259,10 +259,27 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
     const u = users.find((x) => x.name === name);
     if (!u) return;
     const myItems = items.filter((i) => i.managing_officer && i.managing_officer.includes(name));
+    
+    // Count CTV classifications
+    const classCounts = {};
+    CLASSIFICATIONS.forEach(cls => {
+      classCounts[cls] = 0;
+    });
+    myItems.forEach(item => {
+      let cls = item.classification || "CSBM";
+      if (cls === "CS") cls = "CSBM";
+      if (cls === "DD") cls = "CTVDD";
+      if (cls === "HT") cls = "HTBM";
+      if (CLASSIFICATIONS.includes(cls)) {
+        classCounts[cls] = (classCounts[cls] || 0) + 1;
+      }
+    });
+
     setCanBoPopup({
       ...u,
       total_ctv: myItems.length,
-      active_ctv: myItems.filter((i) => i.status === "hoat_dong" || !i.status).length
+      active_ctv: myItems.filter((i) => i.status === "hoat_dong" || !i.status).length,
+      classCounts
     });
   };
 
@@ -751,8 +768,8 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
         >
           <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: isMobile ? "wrap" : "nowrap" }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: isMobile ? "100%" : 120 }}>
-              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: "bold", color: "#2563EB", border: "2px solid #DBEAFE" }}>
-                {canBoPopup.name?.split(" ").slice(-1)[0][0]}
+              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: "2px solid #DBEAFE" }}>
+                <UserAvatar user={canBoPopup} size={80} />
               </div>
               <div style={{ fontWeight: 800, color: "#1E293B", fontSize: 15, marginTop: 8, textAlign: "center" }}>{canBoPopup.name}</div>
               <div style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>{canBoPopup.chuc_vu}</div>
@@ -772,20 +789,32 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
                   <div style={{ fontSize: 13, color: "#334155" }}>{canBoPopup.department}</div>
                 </div>
                 <div>
-                  <span style={{ fontSize: 10, color: "#94A3B8", fontWeight: 700, textTransform: "uppercase" }}>Số điện thoại:</span>
-                  <div style={{ fontSize: 13, color: "#334155" }}>{canBoPopup.phone || "—"}</div>
-                </div>
-                <div>
-                  <span style={{ fontSize: 10, color: "#94A3B8", fontWeight: 700, textTransform: "uppercase" }}>Email thư điện tử:</span>
-                  <div style={{ fontSize: 13, color: "#334155", wordBreak: "break-all" }}>{canBoPopup.email || "—"}</div>
-                </div>
-                <div>
                   <span style={{ fontSize: 10, color: "#94A3B8", fontWeight: 700, textTransform: "uppercase" }}>CTV quản lý:</span>
                   <div style={{ fontSize: 14, fontWeight: 700, color: "#2563EB" }}>{canBoPopup.total_ctv} CTV</div>
                 </div>
                 <div>
                   <span style={{ fontSize: 10, color: "#94A3B8", fontWeight: 700, textTransform: "uppercase" }}>CTV đang HĐ:</span>
                   <div style={{ fontSize: 14, fontWeight: 700, color: "#16A34A" }}>{canBoPopup.active_ctv} CTV</div>
+                </div>
+              </div>
+
+              {/* Phân loại CTV đang quản lý */}
+              <div style={{ marginTop: 16, borderTop: "1px solid #E2E8F0", paddingTop: 12 }}>
+                <span style={{ fontSize: 10, color: "#94A3B8", fontWeight: 700, textTransform: "uppercase" }}>Phân loại CTV đang quản lý:</span>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                  {CLASSIFICATIONS.map((cls) => {
+                    const count = canBoPopup.classCounts?.[cls] || 0;
+                    if (count === 0) return null;
+                    return (
+                      <div key={cls} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        {getClassificationBadge(cls)}
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "#475569" }}>x{count}</span>
+                      </div>
+                    );
+                  })}
+                  {Object.values(canBoPopup.classCounts || {}).reduce((a, b) => a + b, 0) === 0 && (
+                    <span style={{ fontSize: 12, color: "#64748B", fontStyle: "italic" }}>Chưa quản lý CTV nào</span>
+                  )}
                 </div>
               </div>
               

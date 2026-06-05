@@ -60,7 +60,11 @@ export default function Home() {
       if (!usersErr && dbUsers) {
         const merged = dbUsers.map(u => {
           const override = qhctvUsers?.find(qo => qo.username === u.username);
-          return override ? { ...u, ...override } : u;
+          if (override) {
+            const { id, username, ...overrideFields } = override;
+            return { ...u, ...overrideFields };
+          }
+          return u;
         });
         setUsers(merged);
       }

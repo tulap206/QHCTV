@@ -49,7 +49,12 @@ export async function GET() {
       .eq('username', user.username);
 
     if (qhctvUserData && qhctvUserData.length > 0) {
-      user = { ...user, ...qhctvUserData[0] };
+      const { id, username: uName, ...overrideFields } = qhctvUserData[0];
+      user = { ...user, ...overrideFields };
+    }
+
+    if (user.role !== 'admin') {
+      return NextResponse.json({ authenticated: false, error: 'Chỉ tài khoản phân quyền Admin ở PC02app mới được phép truy cập!' }, { status: 403 });
     }
 
     return NextResponse.json({ authenticated: true, user });
@@ -84,7 +89,8 @@ export async function POST(request) {
         .select('*')
         .eq('username', username.trim());
       
-      user = mainData && mainData.length > 0 ? { ...mainData[0], ...localOverride } : localOverride;
+      const { id, username: uName, ...overrideFields } = localOverride;
+      user = mainData && mainData.length > 0 ? { ...mainData[0], ...overrideFields } : localOverride;
     } else {
       // Check main users table
       const { data: mainData, error: mainErr } = await supabase
@@ -105,12 +111,17 @@ export async function POST(request) {
           .select('*')
           .eq('username', username.trim());
         if (localData && localData.length > 0) {
-          user = { ...user, ...localData[0] };
+          const { id, username: uName, ...overrideFields } = localData[0];
+          user = { ...user, ...overrideFields };
         }
       }
     }
 
     if (user) {
+      if (user.role !== 'admin') {
+        return NextResponse.json({ error: "Chỉ tài khoản phân quyền Admin ở PC02app mới được phép đăng nhập hệ thống này!" }, { status: 403 });
+      }
+
       const serializedUser = String(user.id);
 
       const cookieStore = await cookies();
