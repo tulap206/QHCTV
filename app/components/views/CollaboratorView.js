@@ -108,7 +108,10 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
       // Map status fallback
       status: item.status === "tam_khoa" ? "tam_ngung" : (item.status === "ngung_hoat_dong" ? "dung_hoat_dong" : (item.status || "hoat_dong")),
       classification: item.classification || "CSBM",
-      competence: item.competence || "Khá"
+      competence: item.competence || "Khá",
+      khu_vuc_hoat_dong: item.khu_vuc_hoat_dong || "",
+      giao_nhiem_vu: item.giao_nhiem_vu || "",
+      ket_qua: item.ket_qua || ""
     }));
   }, [data["collaborators"]]);
 
@@ -201,7 +204,10 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
       coverage_radius: parseInt(form.coverage_radius) || 500,
       status: form.status || "hoat_dong",
       classification: form.classification || "CSBM",
-      competence: form.competence || "Khá"
+      competence: form.competence || "Khá",
+      khu_vuc_hoat_dong: form.khu_vuc_hoat_dong || "",
+      giao_nhiem_vu: form.giao_nhiem_vu || "",
+      ket_qua: form.ket_qua || ""
     };
     
     let nd;
@@ -658,6 +664,22 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
                 <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Cán bộ quản lý:</span>
                 <div style={{ fontSize: 14, color: "#334155", fontWeight: 600 }}>{ctvDetailPopup.managing_officer || "—"}</div>
               </div>
+              <div style={{ gridColumn: isMobile ? "auto" : "span 2" }}>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Khu vực hoạt động:</span>
+                <div style={{ fontSize: 14, color: "#334155", fontWeight: 600, marginTop: 2 }}>{ctvDetailPopup.khu_vuc_hoat_dong || "—"}</div>
+              </div>
+              <div style={{ gridColumn: isMobile ? "auto" : "span 2" }}>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Giao nhiệm vụ:</span>
+                <div style={{ fontSize: 13, color: "#475569", background: "#F8FAFC", border: "1px solid #E2E8F0", padding: "10px 14px", borderRadius: 8, whiteSpace: "pre-wrap", marginTop: 4 }}>
+                  {ctvDetailPopup.giao_nhiem_vu || "—"}
+                </div>
+              </div>
+              <div style={{ gridColumn: isMobile ? "auto" : "span 2" }}>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Kết quả thực hiện:</span>
+                <div style={{ fontSize: 13, color: "#475569", background: "#F8FAFC", border: "1px solid #E2E8F0", padding: "10px 14px", borderRadius: 8, whiteSpace: "pre-wrap", marginTop: 4 }}>
+                  {ctvDetailPopup.ket_qua || "—"}
+                </div>
+              </div>
             </div>
             
             {ctvDetailPopup.ghi_chu && (
@@ -769,6 +791,9 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
     coverage_radius: "500",
     status: "hoat_dong",
     competence: "Khá",
+    khu_vuc_hoat_dong: "",
+    giao_nhiem_vu: "",
+    ket_qua: "",
     ghi_chu: ""
   });
 
@@ -786,6 +811,9 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
         coverage_radius: String(item.coverage_radius || "500"),
         status: item.status || "hoat_dong",
         competence: item.competence || "Khá",
+        khu_vuc_hoat_dong: item.khu_vuc_hoat_dong || "",
+        giao_nhiem_vu: item.giao_nhiem_vu || "",
+        ket_qua: item.ket_qua || "",
         ghi_chu: item.ghi_chu || ""
       });
     } else {
@@ -961,13 +989,43 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
         </FormField>
       </div>
 
-      <FormField label="Ghi chú nghiệp vụ / Mô tả địa bàn">
+      <FormField label="Khu vực hoạt động">
+        <input 
+          name="khu_vuc_hoat_dong" 
+          value={form.khu_vuc_hoat_dong || ""} 
+          onChange={handleChange} 
+          style={inputSt} 
+          placeholder="Ví dụ: Khu vực chợ Đông Ba, các phường Phú Hòa, Phú Cát..." 
+        />
+      </FormField>
+
+      <FormField label="Giao nhiệm vụ">
+        <textarea 
+          name="giao_nhiem_vu" 
+          value={form.giao_nhiem_vu || ""} 
+          onChange={handleChange} 
+          style={textareaSt} 
+          placeholder="Mô tả cụ thể nhiệm vụ giao cho cộng tác viên..." 
+        />
+      </FormField>
+
+      <FormField label="Kết quả">
+        <textarea 
+          name="ket_qua" 
+          value={form.ket_qua || ""} 
+          onChange={handleChange} 
+          style={textareaSt} 
+          placeholder="Kết quả thực hiện nhiệm vụ..." 
+        />
+      </FormField>
+
+      <FormField label="Ghi chú">
         <textarea 
           name="ghi_chu" 
           value={form.ghi_chu} 
           onChange={handleChange} 
           style={textareaSt} 
-          placeholder="Ghi chú thêm các mối quan hệ, các đối tượng cần lưu ý trong khu vực..."
+          placeholder="Ghi chú nghiệp vụ khác..." 
         />
       </FormField>
 

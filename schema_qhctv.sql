@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS collaborators (
     coverage_radius INT NOT NULL DEFAULT 500, -- in meters, for radar scanning area
     status TEXT NOT NULL DEFAULT 'hoat_dong', -- hoat_dong, tam_ngung, dung_hoat_dong
     competence TEXT NOT NULL DEFAULT 'Khá', -- Xuất sắc, Tốt, Khá, Kém
+    khu_vuc_hoat_dong TEXT,
+    giao_nhiem_vu TEXT,
+    ket_qua TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     ghi_chu TEXT
 );
@@ -27,9 +30,9 @@ VALUES ('admin', 'Admin@123', 'Quản trị viên', 'Đại úy', 'Admin', 'admi
 ON CONFLICT (username) DO NOTHING;
 
 -- 4. Seed default collaborators in Hue city area
-INSERT INTO collaborators (ma_so, nickname, classification, address, phone, managing_officer, lat, lng, coverage_radius, status, competence, ghi_chu)
+INSERT INTO collaborators (ma_so, nickname, classification, address, phone, managing_officer, lat, lng, coverage_radius, status, competence, khu_vuc_hoat_dong, giao_nhiem_vu, ket_qua, ghi_chu)
 VALUES 
-('CTV-001', 'Anh Bảy Chợ Đông Ba', 'CS', 'Chợ Đông Ba, Phú Hòa, Huế', '0905111222', 'Phan Lê Tự Lập', 16.4682, 107.5878, 400, 'hoat_dong', 'Xuất sắc', 'Địa bàn hoạt động xung quanh cổng chợ'),
-('CTV-002', 'Chú Sáu Vỹ Dạ', 'ĐT1', 'Phường Vỹ Dạ, TP Huế', '0905333444', 'Dương Văn Thành', 16.4695, 107.6042, 600, 'tam_ngung', 'Tốt', 'Theo dõi các tụ điểm karaoke ven sông'),
-('CTV-003', 'Chị Năm An Cựu', 'ĐT2', 'Cầu An Cựu, TP Huế', '0905555666', 'Trương Tuấn Long', 16.4528, 107.5955, 300, 'hoat_dong', 'Khá', 'Địa bàn ga Huế và bến xe phía Nam')
+('CTV-001', 'Anh Bảy Chợ Đông Ba', 'CS', 'Chợ Đông Ba, Phú Hòa, Huế', '0905111222', 'Phan Lê Tự Lập', 16.4682, 107.5878, 400, 'hoat_dong', 'Xuất sắc', 'Chợ Đông Ba và phụ cận', 'Nắm tình hình trộm cắp và các băng nhóm hoạt động bảo kê tại chợ Đông Ba', 'Đang thực hiện tốt, báo tin kịp thời về 2 vụ móc túi', 'Địa bàn hoạt động xung quanh cổng chợ'),
+('CTV-002', 'Chú Sáu Vỹ Dạ', 'ĐT1', 'Phường Vỹ Dạ, TP Huế', '0905333444', 'Dương Văn Thành', 16.4695, 107.6042, 600, 'tam_ngung', 'Tốt', 'Phường Vỹ Dạ và cồn Hến', 'Giám sát hoạt động của các tụ điểm ăn chơi về đêm, hát karaoke ven sông', 'Chưa có thông tin mới do đang tạm ngưng', 'Theo dõi các tụ điểm karaoke ven sông'),
+('CTV-003', 'Chị Năm An Cựu', 'ĐT2', 'Cầu An Cựu, TP Huế', '0905555666', 'Trương Tuấn Long', 16.4528, 107.5955, 300, 'hoat_dong', 'Khá', 'Khu vực Ga Huế và Bến xe Phía Nam', 'Theo dõi luồng di cư, hoạt động của đối tượng nghi vấn đi tàu/xe khách', 'Đã cung cấp thông tin 1 đối tượng nghi vấn vận chuyển hàng cấm', 'Địa bàn ga Huế và bến xe phía Nam')
 ON CONFLICT (ma_so) DO NOTHING;
