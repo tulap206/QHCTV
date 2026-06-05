@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 
-export default function LeafletMap({ collaborators, onSelectCollaborator, onMapClick }) {
+export default function LeafletMap({ collaborators, onSelectCollaborator, onMapClick, height = '450px' }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -96,7 +96,22 @@ export default function LeafletMap({ collaborators, onSelectCollaborator, onMapC
 
     collaborators.forEach(ctv => {
       const position = [ctv.lat, ctv.lng];
-      const activeColor = ctv.status === "hoat_dong" || !ctv.status ? "#22C55E" : (ctv.status === "tam_khoa" ? "#F59E0B" : "#EF4444");
+      
+      let activeColor = "#3B82F6";
+      const c = String(ctv.classification || "CSBM").trim();
+      if (c === "CSBM" || c === "CS") {
+        activeColor = "#2563EB";
+      } else if (c === "ĐT1") {
+        activeColor = "#DC2626";
+      } else if (c === "ĐT2") {
+        activeColor = "#D97706";
+      } else if (c === "ĐT3") {
+        activeColor = "#4F46E5";
+      } else if (c === "CTVDD" || c === "DD") {
+        activeColor = "#0D9488";
+      } else if (c === "HTBM" || c === "HT") {
+        activeColor = "#0891B2";
+      }
       
       const customIcon = L.divIcon({
         className: 'custom-leaflet-marker',
@@ -176,7 +191,7 @@ export default function LeafletMap({ collaborators, onSelectCollaborator, onMapC
   }, [collaborators, zoomLevel, leafletInstance]);
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '450px' }}>
+    <div style={{ position: 'relative', width: '100%', height: height }}>
       <style>{`
         .leaflet-custom-tooltip {
           background: #ffffff !important;

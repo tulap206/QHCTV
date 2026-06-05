@@ -132,29 +132,71 @@ function StackedBarChart({ data, height = 180, width = 300 }) {
    MAIN DASHBOARD COMPONENT
    ───────────────────────────────────────────── */
 export default function Dashboard({ data, users, setActivePage, setSelectedRecord, isMobile }) {
-  const [search, setSearch] = useState('');
   const [selectedMapCtv, setSelectedMapCtv] = useState(null);
 
   const ctvList = useMemo(() => data["collaborators"] || [], [data]);
 
-  // Compute metrics
   const totalCtv = ctvList.length;
-  const activeCtv = ctvList.filter(c => c.status === "hoat_dong" || !c.status).length;
-  const lockedCtv = ctvList.filter(c => c.status === "tam_khoa").length;
-  const inactiveCtv = ctvList.filter(c => c.status === "ngung_hoat_dong").length;
 
-  // Search filter
-  const searchResults = useMemo(() => {
-    if (!search.trim()) return [];
-    const q = search.toLowerCase();
-    return ctvList.filter(c => 
-      c.nickname?.toLowerCase().includes(q) || 
-      c.address?.toLowerCase().includes(q) || 
-      c.ma_so?.toLowerCase().includes(q) ||
-      c.phone?.toLowerCase().includes(q) ||
-      c.managing_officer?.toLowerCase().includes(q)
-    ).slice(0, 10);
-  }, [search, ctvList]);
+  const classStats = useMemo(() => {
+    const counts = { CSBM: 0, ĐT1: 0, ĐT2: 0, ĐT3: 0, CTVDD: 0, HTBM: 0 };
+    ctvList.forEach(c => {
+      let cls = c.classification || "CSBM";
+      if (cls === "CS") cls = "CSBM";
+      if (cls === "DD") cls = "CTVDD";
+      if (cls === "HT") cls = "HTBM";
+      if (counts[cls] !== undefined) {
+        counts[cls]++;
+      } else {
+        counts["CSBM"]++;
+      }
+    });
+    return [
+      { label: 'Cơ sở (CSBM)', value: counts.CSBM, color: '#2563EB' },
+      { label: 'Đặc tình 1 (ĐT1)', value: counts.ĐT1, color: '#DC2626' },
+      { label: 'Đặc tình 2 (ĐT2)', value: counts.ĐT2, color: '#D97706' },
+      { label: 'Đặc tình 3 (ĐT3)', value: counts.ĐT3, color: '#4F46E5' },
+      { label: 'Danh dự (CTVDD)', value: counts.CTVDD, color: '#0D9488' },
+      { label: 'Hộp thư (HTBM)', value: counts.HTBM, color: '#0891B2' }
+    ];
+  }, [ctvList]);
+
+  const competenceStats = useMemo(() => {
+    const counts = { 'Xuất sắc': 0, 'Tốt': 0, 'Khá': 0, 'Kém': 0 };
+    ctvList.forEach(c => {
+      const comp = c.competence || "Khá";
+      if (counts[comp] !== undefined) {
+        counts[comp]++;
+      } else {
+        counts['Khá']++;
+      }
+    });
+    return [
+      { label: 'Xuất sắc', value: counts['Xuất sắc'], color: '#7C3AED' },
+      { label: 'Tốt', value: counts['Tốt'], color: '#2563EB' },
+      { label: 'Khá', value: counts['Khá'], color: '#D97706' },
+      { label: 'Kém', value: counts['Kém'], color: '#DC2626' }
+    ];
+  }, [ctvList]);
+
+  const statusStats = useMemo(() => {
+    const counts = { hoat_dong: 0, tam_ngung: 0, dung_hoat_dong: 0 };
+    ctvList.forEach(c => {
+      let st = c.status || "hoat_dong";
+      if (st === "tam_khoa") st = "tam_ngung";
+      if (st === "ngung_hoat_dong") st = "dung_hoat_dong";
+      if (counts[st] !== undefined) {
+        counts[st]++;
+      } else {
+        counts.hoat_dong++;
+      }
+    });
+    return [
+      { label: 'Hoạt động', value: counts.hoat_dong, color: '#22C55E' },
+      { label: 'Tạm ngưng', value: counts.tam_ngung, color: '#F59E0B' },
+      { label: 'Dừng hoạt động', value: counts.dung_hoat_dong, color: '#EF4444' }
+    ];
+  }, [ctvList]);
 
   // Workload data (number of CTVs managed by each officer)
   const stackedData = useMemo(() => {
@@ -169,13 +211,6 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
       };
     }).sort((a, b) => b.totalActive - a.totalActive).slice(0, 6);
   }, [users, ctvList]);
-
-  // Donut stats
-  const donutSegs = [
-    { label: 'Hoạt động', value: activeCtv, color: '#10B981' },
-    { label: 'Tạm khóa', value: lockedCtv, color: '#F59E0B' },
-    { label: 'Ngừng HĐ', value: inactiveCtv, color: '#EF4444' }
-  ];
 
   const card = (extra = {}) => ({
     background: '#fff', 
@@ -202,50 +237,6 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
         </div>
       </div>
 
-      {/* Global Search Bar */}
-      <div style={{ position: 'relative', marginBottom: 24 }}>
-        <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: '#94A3B8', pointerEvents: 'none' }}>🔍</span>
-        <input 
-          value={search} 
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Tìm nhanh CTV: Biệt danh, mã quy hoạch, địa bàn hoạt động, số điện thoại, cán bộ phụ trách..."
-          style={{ width: '100%', padding: '13px 16px 13px 46px', border: '2px solid #E2E8F0', borderRadius: 14, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', transition: 'border-color 0.2s' }}
-          onFocus={e => e.target.style.borderColor = '#3B82F6'}
-          onBlur={e => e.target.style.borderColor = '#E2E8F0'}
-        />
-      </div>
-
-      {/* Global Search Results dropdown panel */}
-      {search.trim() && (
-        <div style={{ ...card(), marginBottom: 20, padding: '16px' }}>
-          <div style={{ fontSize: 12, color: '#64748B', marginBottom: 10 }}>Tìm thấy <b style={{ color: '#1E293B' }}>{searchResults.length}</b> kết quả cho "<b style={{ color: '#3B82F6' }}>{search}</b>"</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 260, overflowY: 'auto' }}>
-            {searchResults.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#94A3B8', padding: 20 }}>Không tìm thấy CTV phù hợp</div>
-            ) : (
-              searchResults.map((item, i) => (
-                <div 
-                  key={i} 
-                  onClick={() => {
-                    setSelectedMapCtv(item);
-                    setSearch('');
-                  }}
-                  className="dash-hover"
-                  style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #F1F5F9', borderLeft: `4px solid #EC4899`, cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center', background: "#FAFBFC" }}
-                >
-                  <div style={{ fontSize: 18 }}>👥</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: '#1E293B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.nickname}</div>
-                    <div style={{ fontSize: 11, color: '#94A3B8' }}>{item.address} · CB phụ trách: {item.managing_officer || "—"}</div>
-                  </div>
-                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: '#F1F5F9', color: '#64748B', fontWeight: 600 }}>{item.ma_so}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Dynamic Interactive map container block */}
       <div style={{ ...card({ padding: "16px" }), marginBottom: "24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
@@ -254,58 +245,29 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
             <span style={{ fontSize: "11px", color: "#64748B" }}>Hiển thị các vị trí và bán kính quét radar của CTV (Zoom vào gần để quét khu vực)</span>
           </div>
         </div>
-        <LeafletMap collaborators={ctvList} onSelectCollaborator={setSelectedMapCtv} />
+        <LeafletMap collaborators={ctvList} onSelectCollaborator={setSelectedMapCtv} height="580px" />
       </div>
 
-      {/* KPI Stats counters row */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
-        {[
-          { label: 'Tổng số CTV quy hoạch', value: totalCtv, color: '#2563EB', bg: 'linear-gradient(135deg,#EFF6FF,#DBEAFE)', border: '#BFDBFE', sub: 'Toàn thành phố' },
-          { label: 'CTV đang hoạt động', value: activeCtv, color: '#10B981', bg: 'linear-gradient(135deg,#F0FDF4,#DCFCE7)', border: '#BBF7D0', sub: 'Thực hiện nhiệm vụ' },
-          { label: 'CTV đang tạm khóa', value: lockedCtv, color: '#D97706', bg: 'linear-gradient(135deg,#FFFBEB,#FEF3C7)', border: '#FDE68A', sub: 'Ngừng nhận tin báo' },
-          { label: 'CTV ngừng hoạt động', value: inactiveCtv, color: '#DC2626', bg: 'linear-gradient(135deg,#FEF2F2,#FEE2E2)', border: '#FECACA', sub: 'Đã rút khỏi mạng lưới' }
-        ].map((k, i) => (
-          <div 
-            key={i}
-            style={{
-              background: k.bg,
-              borderRadius: 18,
-              padding: '18px 20px',
-              border: `1px solid ${k.border}`,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-          >
-            <div>
-              <div style={{ fontSize: 36, fontWeight: 900, color: k.color, lineHeight: 1, letterSpacing: '-1px' }}>{k.value}</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: k.color + 'CC', marginTop: 4 }}>{k.label}</div>
-              <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 3 }}>{k.sub}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Bottom Chart layout grids */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1.8fr', gap: 16, marginBottom: 24 }}>
+      {/* Three Horizontal Distribution Charts Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
         
-        {/* Status Distribution Donut */}
+        {/* 1. Classification Donut */}
         <div style={card({ padding: 20 })}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>📊 Tỷ lệ trạng thái CTV</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>📊 Phân loại CTV</div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <div style={{ position: 'relative', width: 130, height: 130 }}>
-              <DonutChart segments={donutSegs} size={130} thickness={22} />
+            <div style={{ position: 'relative', width: 120, height: 120 }}>
+              <DonutChart segments={classStats} size={120} thickness={20} />
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ fontSize: 26, fontWeight: 900, color: '#1E293B' }}>{totalCtv}</div>
-                <div style={{ fontSize: 9, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Tổng CTV</div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: '#1E293B' }}>{totalCtv}</div>
+                <div style={{ fontSize: 8, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Tổng CTV</div>
               </div>
             </div>
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {donutSegs.map((d, i) => (
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+              {classStats.map((d, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 3, background: d.color, flexShrink: 0 }} />
-                  <span style={{ fontSize: 12, color: '#64748B', flex: 1 }}>{d.label}</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: d.color }}>{d.value}</span>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color, flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, color: '#64748B', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: d.color }}>{d.value}</span>
                   <span style={{ fontSize: 10, color: '#94A3B8', width: 32, textAlign: 'right' }}>{totalCtv > 0 ? Math.round(d.value / totalCtv * 100) : 0}%</span>
                 </div>
               ))}
@@ -313,14 +275,63 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
           </div>
         </div>
 
-        {/* Officer workload stack bar chart */}
+        {/* 2. Competence Donut */}
         <div style={card({ padding: 20 })}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>👥 Tải quản lý CTV của Cán bộ</div>
-            <button onClick={() => setActivePage('users')} style={{ fontSize: 11, color: '#3B82F6', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Xem chi tiết →</button>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>🏆 Năng lực CTV</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <div style={{ position: 'relative', width: 120, height: 120 }}>
+              <DonutChart segments={competenceStats} size={120} thickness={20} />
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ fontSize: 22, fontWeight: 900, color: '#1E293B' }}>{totalCtv}</div>
+                <div style={{ fontSize: 8, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Tổng CTV</div>
+              </div>
+            </div>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+              {competenceStats.map((d, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color, flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, color: '#64748B', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: d.color }}>{d.value}</span>
+                  <span style={{ fontSize: 10, color: '#94A3B8', width: 32, textAlign: 'right' }}>{totalCtv > 0 ? Math.round(d.value / totalCtv * 100) : 0}%</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <StackedBarChart data={stackedData} height={180} />
         </div>
+
+        {/* 3. Status Donut */}
+        <div style={card({ padding: 20 })}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>📈 Trạng thái CTV</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <div style={{ position: 'relative', width: 120, height: 120 }}>
+              <DonutChart segments={statusStats} size={120} thickness={20} />
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ fontSize: 22, fontWeight: 900, color: '#1E293B' }}>{totalCtv}</div>
+                <div style={{ fontSize: 8, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Tổng CTV</div>
+              </div>
+            </div>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+              {statusStats.map((d, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color, flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, color: '#64748B', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: d.color }}>{d.value}</span>
+                  <span style={{ fontSize: 10, color: '#94A3B8', width: 32, textAlign: 'right' }}>{totalCtv > 0 ? Math.round(d.value / totalCtv * 100) : 0}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Officer workload stack bar chart */}
+      <div style={{ ...card({ padding: 20 }), marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>👥 Tải quản lý CTV của Cán bộ</div>
+          <button onClick={() => setActivePage('users')} style={{ fontSize: 11, color: '#3B82F6', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Xem chi tiết →</button>
+        </div>
+        <StackedBarChart data={stackedData} height={180} />
       </div>
 
       {/* Map Click Details popup card modal */}
