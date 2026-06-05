@@ -855,11 +855,7 @@ export default function Home() {
         {/* Profile and log out footer */}
         <div style={{ padding: "9px 5px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
           <div 
-            style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 11px", marginBottom: 5, cursor: "pointer" }} 
-            onClick={() => {
-              setShowProfileEdit(true);
-              if (isMobile) setSidebarOpen(false);
-            }}
+            style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 11px", marginBottom: 5 }}
           >
             <UserAvatar user={currentUser} size={30} />
             {sidebarOpen && (
