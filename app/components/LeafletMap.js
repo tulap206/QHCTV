@@ -234,6 +234,53 @@ export default function LeafletMap({ collaborators, onSelectCollaborator, onMapC
           boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
         }} 
       />
+
+      {/* Map Legend Overlay */}
+      <div style={{
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        zIndex: 1000,
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(4px)',
+        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        padding: '10px 12px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+        fontSize: '11px',
+        fontWeight: 700,
+        color: '#334155',
+        pointerEvents: 'none'
+      }}>
+        <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: 4, marginBottom: 2, fontSize: '10px', color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 }}>Chú thích</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#2563EB', border: '1.5px solid #fff', boxShadow: '0 0 2px rgba(0,0,0,0.3)' }} />
+          <span>Cơ sở (CSBM)</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#DC2626', border: '1.5px solid #fff', boxShadow: '0 0 2px rgba(0,0,0,0.3)' }} />
+          <span>Đặc tình 1 (ĐT1)</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#D97706', border: '1.5px solid #fff', boxShadow: '0 0 2px rgba(0,0,0,0.3)' }} />
+          <span>Đặc tình 2 (ĐT2)</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#4F46E5', border: '1.5px solid #fff', boxShadow: '0 0 2px rgba(0,0,0,0.3)' }} />
+          <span>Đặc tình 3 (ĐT3)</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#0D9488', border: '1.5px solid #fff', boxShadow: '0 0 2px rgba(0,0,0,0.3)' }} />
+          <span>Danh dự (CTVDD)</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#0891B2', border: '1.5px solid #fff', boxShadow: '0 0 2px rgba(0,0,0,0.3)' }} />
+          <span>Hộp thư (HTBM)</span>
+        </div>
+      </div>
     </div>
   );
 }
