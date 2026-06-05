@@ -167,9 +167,9 @@ export default function LoginPage({ onLogin }) {
               <div style={{ position: "absolute", bottom: -4, right: -4, width: 22, height: 22, background: "linear-gradient(135deg,#C8102E,#991B1B)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #0A0F1E", fontSize: 11 }}>🔒</div>
             </div>
           </div>
-          <h1 style={{ color: "#fff", fontSize: 18, fontWeight: 900, margin: "0 0 4px", letterSpacing: 1.5, textTransform: "uppercase" }}>QHCTV</h1>
-          <div style={{ color: "#F59E0B", fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>QUẢN LÝ CỘNG TÁC VIÊN</div>
-          <div style={{ color: "#94A3B8", fontSize: 10.5, letterSpacing: 0.5 }}>Bộ phận QLCTV - Công an Thành phố Huế</div>
+          <h1 style={{ color: "#fff", fontSize: 18, fontWeight: 900, margin: "0 0 4px", letterSpacing: 1.5, textTransform: "uppercase" }}>PC02APP</h1>
+          <div style={{ color: "#F59E0B", fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>QUẢN LÝ QUY HOẠCH CTV</div>
+          <div style={{ color: "#94A3B8", fontSize: 10.5, letterSpacing: 0.5 }}>PC02 - Công an Thành phố Huế</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "14px auto 0", justifyContent: "center" }}>
             <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg,transparent,rgba(200,16,46,0.5))" }} />
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#C8102E" }} />
@@ -337,11 +337,11 @@ export default function LoginPage({ onLogin }) {
       {/* Footer */}
       <div style={{ textAlign: "center", marginTop: 24, position: "relative", zIndex: 1 }}>
         <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 11, marginBottom: 4 }}>
-          © 2026 QHCTV · Hệ thống quản lý Cộng tác viên · Phiên bản v1.0.1
+        © 2026 PC02App · Hệ thống quản lý công việc nội bộ · Phiên bản v1.0.1
         </div>
         <div style={{ color: "rgba(255,255,255,0.18)", fontSize: 10.5, fontStyle: "italic", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
           <span>✦</span>
-          <span>Phòng Cảnh sát Hình sự - Công an Tỉnh Thừa Thiên Huế</span>
+          <span>✦ Phan Lê Tự Lập - 0967611112 ✦</span>
           <span>✦</span>
         </div>
       </div>
