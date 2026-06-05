@@ -551,7 +551,7 @@ function BackupPage({ data, users, logs, departments, onRestore, addLog }) {
     if (typeof window !== "undefined") {
       const fetchBackups = async () => {
         try {
-          const { data: dbBackups, error } = await supabase.from('police_backups').select('*').order('id', { ascending: false });
+          const { data: dbBackups, error } = await supabase.from('qhctv_backups').select('*').order('id', { ascending: false });
           if (dbBackups && !error) {
             setBackups(dbBackups);
             return;
@@ -560,7 +560,7 @@ function BackupPage({ data, users, logs, departments, onRestore, addLog }) {
           console.warn("Supabase fetch backups failed, falling back to local storage:", err);
         }
         
-        const saved = localStorage.getItem("police_backups");
+        const saved = localStorage.getItem("qhctv_backups");
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
@@ -581,7 +581,7 @@ function BackupPage({ data, users, logs, departments, onRestore, addLog }) {
       let userCount = 0;
       let caseCount = 0;
 
-      const rawUsers = localStorage.getItem("pc02_users");
+      const rawUsers = localStorage.getItem("qhctv_users");
       if (rawUsers) {
         try {
           const parsed = JSON.parse(rawUsers);
@@ -592,13 +592,9 @@ function BackupPage({ data, users, logs, departments, onRestore, addLog }) {
         } catch (e) {}
       }
 
-      const tables = [
-        'don_to_giac', 'tin_bao', 'vu_an', 'truy_tim', 'truy_na',
-        'quan_ly_doi_tuong', 'xe_truy_tim', 'vu_viec',
-        'so_dien_thoai', 'so_tai_khoan', 'xu_ly_van_ban', 'camera_hues'
-      ];
+      const tables = ['collaborators'];
       tables.forEach(t => {
-        const raw = localStorage.getItem(`pc02_${t}`);
+        const raw = localStorage.getItem(`qhctv_${t}`);
         if (raw) {
           try {
             const parsed = JSON.parse(raw);
@@ -623,7 +619,7 @@ function BackupPage({ data, users, logs, departments, onRestore, addLog }) {
   const saveBackups = (list) => {
     setBackups(list);
     if (typeof window !== "undefined") {
-      localStorage.setItem("police_backups", JSON.stringify(list));
+      localStorage.setItem("qhctv_backups", JSON.stringify(list));
     }
   };
 
@@ -637,9 +633,9 @@ function BackupPage({ data, users, logs, departments, onRestore, addLog }) {
     const newBackup = { name, date: dateStr, size: (json.length / 1024).toFixed(1) + "KB", json };
 
     try {
-      const { data: insertedData, error } = await supabase.from('police_backups').insert([newBackup]);
+      const { data: insertedData, error } = await supabase.from('qhctv_backups').insert([newBackup]);
       if (!error) {
-        const { data: dbBackups } = await supabase.from('police_backups').select('*').order('id', { ascending: false });
+        const { data: dbBackups } = await supabase.from('qhctv_backups').select('*').order('id', { ascending: false });
         if (dbBackups) {
           saveBackups(dbBackups);
           showMsg(`✅ Đã sao lưu thành công lên Cloud: ${name}`);
@@ -674,7 +670,7 @@ function BackupPage({ data, users, logs, departments, onRestore, addLog }) {
 
     if (id && String(id).length < 12) {
       try {
-        const { error } = await supabase.from('police_backups').delete().eq('id', id);
+        const { error } = await supabase.from('qhctv_backups').delete().eq('id', id);
         if (!error) {
           const newList = (Array.isArray(backups) ? backups : []).filter((b) => b && b.id !== id);
           saveBackups(newList);
@@ -710,9 +706,9 @@ function BackupPage({ data, users, logs, departments, onRestore, addLog }) {
         const newBackup = { name, date: dateStr, size: (ev.target.result.length / 1024).toFixed(1) + "KB", json: ev.target.result };
 
         try {
-          const { error } = await supabase.from('police_backups').insert([newBackup]);
+          const { error } = await supabase.from('qhctv_backups').insert([newBackup]);
           if (!error) {
-            const { data: dbBackups } = await supabase.from('police_backups').select('*').order('id', { ascending: false });
+            const { data: dbBackups } = await supabase.from('qhctv_backups').select('*').order('id', { ascending: false });
             if (dbBackups) {
               saveBackups(dbBackups);
               showMsg('📤 Đã import file thành công lên Cloud! Nhấn "Khôi phục" để áp dụng.', "success");
@@ -818,17 +814,13 @@ function BackupPage({ data, users, logs, departments, onRestore, addLog }) {
                     setRestoring(true);
                     try {
                       const getLocalTable = (tableName) => {
-                        let raw = localStorage.getItem(`pc02_${tableName}`);
+                        let raw = localStorage.getItem(`qhctv_${tableName}`);
                         return raw ? JSON.parse(raw) : null;
                       };
                       const localUsers = getLocalTable('users');
                       const localDepts = getLocalTable('departments');
                       const localLogs = getLocalTable('system_logs');
-                      const tables = [
-                        'don_to_giac', 'tin_bao', 'vu_an', 'truy_tim', 'truy_na',
-                        'quan_ly_doi_tuong', 'xe_truy_tim', 'vu_viec',
-                        'so_dien_thoai', 'so_tai_khoan', 'xu_ly_van_ban', 'camera_hues'
-                      ];
+                      const tables = ['collaborators'];
                       const localData = {};
                       tables.forEach(t => {
                         localData[t] = getLocalTable(t);
@@ -861,15 +853,11 @@ function BackupPage({ data, users, logs, departments, onRestore, addLog }) {
                 <button
                   onClick={() => {
                     if (window.confirm("Bạn có chắc chắn muốn xóa bản lưu trữ cục bộ này trên trình duyệt? Việc này không ảnh hưởng đến dữ liệu trên Supabase.")) {
-                      localStorage.removeItem("pc02_users");
-                      localStorage.removeItem("pc02_departments");
-                      localStorage.removeItem("pc02_system_logs");
-                      const tables = [
-                        'don_to_giac', 'tin_bao', 'vu_an', 'truy_tim', 'truy_na',
-                        'quan_ly_doi_tuong', 'xe_truy_tim', 'vu_viec',
-                        'so_dien_thoai', 'so_tai_khoan', 'xu_ly_van_ban', 'camera_hues'
-                      ];
-                      tables.forEach(t => localStorage.removeItem(`pc02_${t}`));
+                      localStorage.removeItem("qhctv_users");
+                      localStorage.removeItem("qhctv_departments");
+                      localStorage.removeItem("qhctv_system_logs");
+                      const tables = ['collaborators'];
+                      tables.forEach(t => localStorage.removeItem(`qhctv_${t}`));
                       setHasLocalData(false);
                       showMsg("🗑️ Đã xóa dữ liệu cũ trên trình duyệt", "warn");
                     }

@@ -34,7 +34,7 @@ export async function GET() {
 
     // Verify user still exists in DB
     const { data, error } = await supabase
-      .from('users')
+      .from('qhctv_users')
       .select('*')
       .eq('id', parsedId);
 
@@ -58,7 +58,7 @@ export async function POST(request) {
     }
 
     const { data, error } = await supabase
-      .from('users')
+      .from('qhctv_users')
       .select('*')
       .eq('username', username.trim())
       .eq('password', password.trim());
@@ -83,7 +83,7 @@ export async function POST(request) {
       });
 
       // Write system log
-      await supabase.from('system_logs').insert([
+      await supabase.from('qhctv_system_logs').insert([
         {
           user_name: user.name,
           action: "Đăng nhập hệ thống (HTTP-Only Session)",

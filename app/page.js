@@ -120,7 +120,7 @@ export default function Home() {
     const loadAllData = async () => {
       try {
         // Fetch users
-        const { data: dbUsers, error: usersErr } = await supabase.from('users').select('*');
+        const { data: dbUsers, error: usersErr } = await supabase.from('qhctv_users').select('*');
         if (!usersErr && dbUsers) setUsers(dbUsers);
         
         // Fetch departments
@@ -128,13 +128,13 @@ export default function Home() {
         if (!deptsErr && dbDepts) setDepartments(dbDepts);
         
         // Fetch logs
-        const { data: dbLogs, error: logsErr } = await supabase.from('system_logs').select('*');
+        const { data: dbLogs, error: logsErr } = await supabase.from('qhctv_system_logs').select('*');
         if (!logsErr && dbLogs) setLogs(dbLogs);
         
         // Fetch the modules + trash_bin
         const tables = [
           'collaborators',
-          'trash_bin'
+          'qhctv_trash_bin'
         ];
         
         const freshData = {};
@@ -192,7 +192,7 @@ export default function Home() {
 
     const tables = [
       'collaborators',
-      'trash_bin'
+      'qhctv_trash_bin'
     ];
 
     const channels = tables.map((table) => {
@@ -225,8 +225,8 @@ export default function Home() {
 
     // Listen for changes to users table
     const usersChannel = supabase
-      .channel('realtime:users')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, (payload) => {
+      .channel('realtime:qhctv_users')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'qhctv_users' }, (payload) => {
         const { eventType, new: newRow, old: oldRow } = payload;
         if (eventType === 'INSERT') {
           setUsers(prev => prev.some(u => u.id === newRow.id) ? prev : [...prev, newRow]);
@@ -255,8 +255,8 @@ export default function Home() {
 
     // Listen for system logs (to keep activity log real-time)
     const logsChannel = supabase
-      .channel('realtime:system_logs')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'system_logs' }, (payload) => {
+      .channel('realtime:qhctv_system_logs')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'qhctv_system_logs' }, (payload) => {
         const { new: newRow } = payload;
         setLogs(prev => prev.some(l => l.id === newRow.id) ? prev : [...prev, newRow]);
       })
@@ -360,7 +360,7 @@ export default function Home() {
     
     // Insert into backend asynchronously
     try {
-      const { error } = await supabase.from('system_logs').insert([{
+      const { error } = await supabase.from('qhctv_system_logs').insert([{
         user_name: logEntry.user_name,
         username: logEntry.username,
         ip_address: logEntry.ip_address,
@@ -371,7 +371,7 @@ export default function Home() {
       }]);
       if (error && (error.code === 'PGRST204' || error.message?.includes('column'))) {
         // Fallback: columns don't exist in Supabase yet
-        await supabase.from('system_logs').insert([{
+        await supabase.from('qhctv_system_logs').insert([{
           user_name: logEntry.user_name,
           action: `${logEntry.action} (TK: ${logEntry.username}, IP: ${logEntry.ip_address}, Thiết bị: ${logEntry.device}, Trình duyệt: ${logEntry.browser})`,
           module: logEntry.module
@@ -422,15 +422,15 @@ export default function Home() {
         throw insertErr;
       }
       
-      await supabase.from('trash_bin').delete().eq('id', trashRecord.id);
+      await supabase.from('qhctv_trash_bin').delete().eq('id', trashRecord.id);
 
       const { data: freshRows } = await supabase.from(moduleKey).select('*');
-      const { data: freshTrash } = await supabase.from('trash_bin').select('*');
+      const { data: freshTrash } = await supabase.from('qhctv_trash_bin').select('*');
       
       setData(prev => ({
         ...prev,
         [moduleKey]: freshRows ? freshRows.map(item => deserializeItem(moduleKey, item)) : prev[moduleKey],
-        trash_bin: freshTrash || []
+        qhctv_trash_bin: freshTrash || []
       }));
 
       addLog(`Khôi phục dữ liệu từ Thùng rác: ${originalData.ma_so || originalData.so_tk || originalData.so_dt || originalData.name || "bản ghi"}`, "sao_luu");
@@ -444,10 +444,10 @@ export default function Home() {
   const handleDeleteTrashPermanently = async (trashRecord) => {
     if (!window.confirm("⚠️ CẢNH BÁO: Hành động này sẽ xóa VĨNH VIỄN dữ liệu này khỏi Thùng rác. Bạn có chắc chắn muốn tiếp tục?")) return;
     try {
-      await supabase.from('trash_bin').delete().eq('id', trashRecord.id);
+      await supabase.from('qhctv_trash_bin').delete().eq('id', trashRecord.id);
       
-      const { data: freshTrash } = await supabase.from('trash_bin').select('*');
-      setData(prev => ({ ...prev, trash_bin: freshTrash || [] }));
+      const { data: freshTrash } = await supabase.from('qhctv_trash_bin').select('*');
+      setData(prev => ({ ...prev, qhctv_trash_bin: freshTrash || [] }));
       
       let itemIdent = "";
       try {
@@ -511,13 +511,13 @@ export default function Home() {
             deleted_at: new Date().toISOString(),
             data: JSON.stringify(item)
           }));
-          await supabase.from('trash_bin').insert(trashEntries);
-          const { data: freshTrash } = await supabase.from('trash_bin').select('*');
+          await supabase.from('qhctv_trash_bin').insert(trashEntries);
+          const { data: freshTrash } = await supabase.from('qhctv_trash_bin').select('*');
           if (freshTrash) {
-            setData(prev => ({ ...prev, trash_bin: freshTrash }));
+            setData(prev => ({ ...prev, qhctv_trash_bin: freshTrash }));
           }
         } catch (e) {
-          console.error("Failed to insert into trash_bin:", e);
+          console.error("Failed to insert into qhctv_trash_bin:", e);
         }
 
         const { error: deleteErr } = await supabase
@@ -580,21 +580,21 @@ export default function Home() {
       
       // 2. Restore users
       if (payload.users && Array.isArray(payload.users) && payload.users.length > 0) {
-        await supabase.from('users').delete().neq('id', -1);
-        await supabase.from('users').insert(payload.users);
+        await supabase.from('qhctv_users').delete().neq('id', -1);
+        await supabase.from('qhctv_users').insert(payload.users);
       }
       
       // 3. Restore system_logs (mapped from payload.logs or payload.system_logs)
       const logList = payload.logs || payload.system_logs;
       if (logList && Array.isArray(logList) && logList.length > 0) {
-        await supabase.from('system_logs').delete().neq('id', -1);
+        await supabase.from('qhctv_system_logs').delete().neq('id', -1);
         const formattedLogs = logList.map(l => ({
           user_name: l.user || l.user_name || "Hệ thống",
           action: l.action,
           module: l.module,
           time: l.time
         }));
-        await supabase.from('system_logs').insert(formattedLogs);
+        await supabase.from('qhctv_system_logs').insert(formattedLogs);
       }
       
       // 4. Restore the collaborators dataset
@@ -1160,7 +1160,7 @@ function ProfileEditModal({ currentUser, setCurrentUser, setUsers, addLog, onClo
       }
 
       const { error } = await supabase
-        .from('users')
+        .from('qhctv_users')
         .update(updatedData)
         .eq('id', currentUser.id);
 

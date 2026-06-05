@@ -312,7 +312,7 @@ export default function UsersPage({
     if (!window.confirm("Xóa cán bộ " + u.name + "?")) return;
 
     try {
-      const { error } = await supabase.from('users').delete().eq('id', u.id);
+      const { error } = await supabase.from('qhctv_users').delete().eq('id', u.id);
       if (error) throw error;
 
       setUsers(p => p.filter(x => x.id !== u.id));
@@ -727,7 +727,7 @@ export default function UsersPage({
                 cleanUser.id = maxId + 1;
               }
               const { data: insertedData, error } = await supabase
-                 .from('users')
+                 .from('qhctv_users')
                  .insert([cleanUser])
                  .select();
               if (error) throw error;
@@ -755,7 +755,7 @@ export default function UsersPage({
               const { stats, ...cleanUser } = updated;
               // Lưu toàn bộ thông tin bao gồm role lên Supabase
               const { data: updatedData, error } = await supabase
-                 .from('users')
+                 .from('qhctv_users')
                  .update(cleanUser)
                  .eq('id', cleanUser.id)
                  .select();
