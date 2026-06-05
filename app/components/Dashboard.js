@@ -40,86 +40,92 @@ function DonutChart({ segments, size = 120, thickness = 22 }) {
   );
 }
 
-function StackedBarChart({ data, height = 180, width = 300 }) {
-  const max = Math.max(...data.map(d => d.totalActive), 1);
-  const paddingLeft = 35;
-  const paddingRight = 10;
-  const paddingTop = 25;
-  const paddingBottom = 25;
+function LineChart({ data, classifications, colors }) {
+  const width = 800;
+  const height = 260;
+  const paddingLeft = 40;
+  const paddingRight = 20;
+  const paddingTop = 30;
+  const paddingBottom = 30;
   const plotWidth = width - paddingLeft - paddingRight;
   const plotHeight = height - paddingTop - paddingBottom;
-  
-  const ticks = [0, 0.25, 0.5, 0.75, 1];
+
+  // Find max value
+  let maxVal = 1;
+  data.forEach(d => {
+    classifications.forEach(cls => {
+      if (d[cls] > maxVal) maxVal = d[cls];
+    });
+  });
+  // Round up maxVal to even number if > 1
+  if (maxVal > 1) {
+    maxVal = Math.ceil(maxVal / 2) * 2;
+  }
+
+  const yTicks = Array.from({ length: 5 }, (_, i) => (maxVal / 4) * i);
+  const xLabels = ["Th.1", "Th.2", "Th.3", "Th.4", "Th.5", "Th.6", "Th.7", "Th.8", "Th.9", "Th.10", "Th.11", "Th.12"];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+    <div style={{ width: '100%' }}>
       {/* Legend */}
-      <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 12, fontSize: 10, fontWeight: 700 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 2, background: '#10B981' }} />
-          <span style={{ color: '#64748B' }}>Hoạt động</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 2, background: '#F59E0B' }} />
-          <span style={{ color: '#64748B' }}>Tạm khóa</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 2, background: '#EF4444' }} />
-          <span style={{ color: '#64748B' }}>Ngừng HĐ</span>
-        </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 16, fontSize: 11, fontWeight: 700 }}>
+        {classifications.map(cls => (
+          <div key={cls} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 14, height: 3, background: colors[cls], borderRadius: 1.5 }} />
+            <span style={{ color: '#475569' }}>{cls}</span>
+          </div>
+        ))}
       </div>
 
       <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} style={{ overflow: 'visible' }}>
-        {/* Horizontal grid lines */}
-        {ticks.map((t, idx) => {
-          const y = paddingTop + plotHeight * (1 - t);
-          const gridVal = Math.round(max * t);
+        {/* Y-axis Ticks and Gridlines */}
+        {yTicks.map((tick, idx) => {
+          const y = paddingTop + plotHeight * (1 - tick / maxVal);
           return (
             <g key={idx}>
-              <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#F1F5F9" strokeWidth="1" strokeDasharray="3 3" />
-              <text x={paddingLeft - 6} y={y + 4} textAnchor="end" fontSize="9" fontWeight="600" fill="#94A3B8">{gridVal}</text>
+              <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#F1F5F9" strokeWidth="1" strokeDasharray="4 4" />
+              <text x={paddingLeft - 8} y={y + 4} textAnchor="end" fontSize="10" fontWeight="600" fill="#94A3B8">{Math.round(tick)}</text>
             </g>
           );
         })}
 
-        {/* Stacked Bars */}
-        {data.map((d, i) => {
-          const barWidth = Math.min(18, plotWidth / data.length - 8);
-          const colX = paddingLeft + (i / data.length) * plotWidth + (plotWidth / data.length - barWidth) / 2;
-          
-          const greenHeight = (d.active / max) * plotHeight;
-          const yellowHeight = (d.locked / max) * plotHeight;
-          const redHeight = (d.inactive / max) * plotHeight;
-          const totalHeight = greenHeight + yellowHeight + redHeight;
+        {/* X-axis Labels */}
+        {xLabels.map((label, idx) => {
+          const x = paddingLeft + (idx / 11) * plotWidth;
+          return (
+            <g key={idx}>
+              <text x={x} y={height - 8} textAnchor="middle" fontSize="10" fontWeight="600" fill="#94A3B8">{label}</text>
+              <line x1={x} y1={paddingTop} x2={x} y2={height - paddingBottom} stroke="#F8FAFC" strokeWidth="1" />
+            </g>
+          );
+        })}
 
-          const startY = paddingTop + plotHeight;
-          const greenY = startY - greenHeight;
-          const yellowY = greenY - yellowHeight;
-          const redY = yellowY - redHeight;
+        {/* Render lines and points */}
+        {classifications.map(cls => {
+          const color = colors[cls];
+          const points = data.map((d, idx) => {
+            const x = paddingLeft + (idx / 11) * plotWidth;
+            const y = paddingTop + plotHeight * (1 - d[cls] / maxVal);
+            return { x, y, val: d[cls] };
+          });
 
-          const lastName = d.name.trim().split(' ').slice(-1)[0] || '';
+          const pathD = points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
           return (
-            <g key={i}>
-              <title>{`${d.name}: Hoạt động ${d.active}, Tạm khóa ${d.locked}, Ngừng HĐ ${d.inactive}`}</title>
+            <g key={cls}>
+              {/* Stroke path */}
+              <path d={pathD} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'all 0.5s ease-in-out' }} />
               
-              <rect x={colX} y={paddingTop} width={barWidth} height={plotHeight} fill="#F8FAFC" rx="3" opacity="0.5" />
-
-              {greenHeight > 0 && (
-                <rect x={colX} y={greenY} width={barWidth} height={greenHeight} fill="#10B981" rx="2" />
-              )}
-              {yellowHeight > 0 && (
-                <rect x={colX} y={yellowY} width={barWidth} height={yellowHeight} fill="#F59E0B" rx="2" />
-              )}
-              {redHeight > 0 && (
-                <rect x={colX} y={redY} width={barWidth} height={redHeight} fill="#EF4444" rx="2" />
-              )}
-
-              {d.totalActive > 0 && (
-                <text x={colX + barWidth / 2} y={startY - totalHeight - 4} textAnchor="middle" fontSize="9" fontWeight="800" fill="#1E293B">{d.totalActive}</text>
-              )}
-
-              <text x={colX + barWidth / 2} y={startY + 14} textAnchor="middle" fontSize="9" fontWeight="700" fill="#64748B">{lastName}</text>
+              {/* Data points */}
+              {points.map((p, idx) => (
+                <g key={idx}>
+                  <title>{`${cls} - Tháng ${idx + 1}: ${p.val} CTV`}</title>
+                  <circle cx={p.x} cy={p.y} r="5" fill="#fff" stroke={color} strokeWidth="3" style={{ transition: 'all 0.3s' }} />
+                  {p.val > 0 && (
+                    <text x={p.x} y={p.y - 8} textAnchor="middle" fontSize="9" fontWeight="800" fill={color}>{p.val}</text>
+                  )}
+                </g>
+              ))}
             </g>
           );
         })}
@@ -198,19 +204,33 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
     ];
   }, [ctvList]);
 
-  // Workload data (number of CTVs managed by each officer)
-  const stackedData = useMemo(() => {
-    return (users || []).filter(u => u.role !== 'viewer').map(u => {
-      const uCtvs = ctvList.filter(c => c.managing_officer === u.name);
-      return {
-        name: u.name,
-        active: uCtvs.filter(c => c.status === "hoat_dong" || !c.status).length,
-        locked: uCtvs.filter(c => c.status === "tam_khoa").length,
-        inactive: uCtvs.filter(c => c.status === "ngung_hoat_dong").length,
-        totalActive: uCtvs.length
-      };
-    }).sort((a, b) => b.totalActive - a.totalActive).slice(0, 6);
-  }, [users, ctvList]);
+  // Time progression data (CTVs created over 12 months for each classification)
+  const lineChartData = useMemo(() => {
+    const classifications = ["CSBM", "ĐT1", "ĐT2", "ĐT3", "CTVDD", "HTBM"];
+    const monthlyData = Array.from({ length: 12 }, (_, i) => {
+      const obj = { month: i + 1 };
+      classifications.forEach(cls => {
+        obj[cls] = 0;
+      });
+      return obj;
+    });
+
+    ctvList.forEach(c => {
+      if (!c.created_date) return;
+      const d = new Date(c.created_date);
+      if (isNaN(d.getTime())) return;
+      const monthIndex = d.getMonth(); // 0 to 11
+      let cls = c.classification || "CSBM";
+      if (cls === "CS") cls = "CSBM";
+      if (cls === "DD") cls = "CTVDD";
+      if (cls === "HT") cls = "HTBM";
+      if (classifications.includes(cls)) {
+        monthlyData[monthIndex][cls]++;
+      }
+    });
+
+    return monthlyData;
+  }, [ctvList]);
 
   const card = (extra = {}) => ({
     background: '#fff', 
@@ -325,13 +345,21 @@ export default function Dashboard({ data, users, setActivePage, setSelectedRecor
 
       </div>
 
-      {/* Officer workload stack bar chart */}
+      {/* Line Chart showing CTV creation history over 12 months */}
       <div style={{ ...card({ padding: 20 }), marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>👥 Tải quản lý CTV của Cán bộ</div>
-          <button onClick={() => setActivePage('users')} style={{ fontSize: 11, color: '#3B82F6', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Xem chi tiết →</button>
-        </div>
-        <StackedBarChart data={stackedData} height={180} />
+        <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>📈 Tiến độ xây dựng CTV theo thời gian (12 Tháng)</div>
+        <LineChart 
+          data={lineChartData} 
+          classifications={["CSBM", "ĐT1", "ĐT2", "ĐT3", "CTVDD", "HTBM"]} 
+          colors={{
+            "CSBM": '#2563EB',
+            "ĐT1": '#DC2626',
+            "ĐT2": '#D97706',
+            "ĐT3": '#4F46E5',
+            "CTVDD": '#0D9488',
+            "HTBM": '#0891B2'
+          }} 
+        />
       </div>
 
       {/* Map Click Details popup card modal */}
