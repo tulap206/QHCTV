@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'Inter','Segoe UI',Arial,sans-serif; background:#F0F4F8; color:#1E293B; }
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:#F0F4F8; }
+::-webkit-scrollbar-thumb { background:#CBD5E1; border-radius:99px; }
+::-webkit-scrollbar-thumb:hover { background:#94A3B8; }
+input,select,textarea,button { font-family:inherit; }
+
+/* Sidebar nav */
+.nav-btn { transition:all 0.18s ease !important; }
+.nav-btn:hover { background:rgba(255,255,255,0.08) !important; color:#E2E8F0 !important; padding-left:14px !important; }
+
+/* Cards */
+.card-hover { transition:all 0.22s cubic-bezier(.4,0,.2,1) !important; }
+.card-hover:hover { box-shadow:0 10px 30px rgba(59,130,246,0.18) !important; border-color:#93C5FD !important; transform:translateY(-2px) !important; }
+
+/* Module cards on dashboard */
+.mod-card { transition:all 0.22s cubic-bezier(.4,0,.2,1) !important; cursor:pointer !important; }
+.mod-card:hover { box-shadow:0 8px 24px rgba(0,0,0,0.14) !important; transform:translateY(-3px) !important; }
+
+/* Table rows */
+.row-hover { transition:background 0.15s ease !important; }
+.row-hover:hover { background:#EFF6FF !important; }
+.item-hover { transition:all 0.15s ease !important; }
+.item-hover:hover { background:#EFF6FF !important; transform:translateX(3px); }
+
+/* Inputs global */
+input:focus, select:focus, textarea:focus {
+  outline:none !important;
+  border-color:#6366F1 !important;
+  box-shadow:0 0 0 3px rgba(99,102,241,0.12) !important;
+}
+
+/* Buttons global hover */
+button:active { transform:scale(0.97) !important; }
+
+/* Topbar alert badges */
+.alert-badge { animation: pulse-badge 2s infinite; }
+@keyframes pulse-badge {
+  0%,100% { opacity:1; }
+  50% { opacity:0.75; }
+}
+
+/* Smooth page transitions */
+.page-content { animation: fadeIn 0.25s ease; }
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(6px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+/* Glassmorphism effects */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+.glass-sidebar {
+  background: rgba(15, 23, 42, 0.88) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+

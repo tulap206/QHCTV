@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Tính Giờ Lệch Camera</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="icon" type="image/png" href="logo.png"/>
+<link rel="apple-touch-icon" href="logo.png"/>
+<link rel="apple-touch-icon" sizes="152x152" href="logo.png"/>
+<link rel="apple-touch-icon" sizes="167x167" href="logo.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="logo.png"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f7;
+  --surface:#ffffff;
+  --surface2:#f5f5f7;
+  --border:#e0e0e5;
+  --text:#1d1d1f;
+  --text2:#6e6e73;
+  --text3:#a1a1a6;
+  --accent:#0071e3;
+  --accent-hover:#0077ed;
+  --green:#28a745;
+  --red:#ff3b30;
+  --yellow:#ff9500;
+  --radius:14px;
+  --radius-sm:10px;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#000000;
+    --surface:#1c1c1e;
+    --surface2:#2c2c2e;
+    --border:#38383a;
+    --text:#f5f5f7;
+    --text2:#98989d;
+    --text3:#636366;
+    --shadow:0 1px 3px rgba(0,0,0,0.4),0 4px 16px rgba(0,0,0,0.3);
+  }
+}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:600px;margin:0 auto;padding:40px 20px 60px}
+
+/* Header */
+.header{
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:36px;
+}
+.header-logo{
+  width:52px;height:52px;
+  border-radius:50%;
+  object-fit:cover;
+  flex-shrink:0;
+  box-shadow:0 2px 8px rgba(0,0,0,0.12);
+}
+.header-text{}
+.header h1{
+  font-size:22px;font-weight:600;
+  letter-spacing:-0.4px;
+  color:var(--text);
+  line-height:1.2;
+}
+.header p{
+  font-size:13px;color:var(--text2);
+  margin-top:3px;font-weight:400;
+}
+
+/* Card */
+.card{
+  background:var(--surface);
+  border-radius:var(--radius);
+  padding:24px;
+  margin-bottom:16px;
+  box-shadow:var(--shadow);
+}
+.card-title{
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:20px;
+}
+
+/* Field */
+.field{margin-bottom:20px}
+.field:last-child{margin-bottom:0}
+.field-label{
+  font-size:12px;
+  font-weight:500;
+  color:var(--text2);
+  margin-bottom:8px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.field-label-text{
+  display:flex;align-items:center;gap:6px;
+}
+.field-label .badge{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  color:var(--accent);
+  font-size:10px;
+  font-weight:600;
+  padding:1px 6px;
+  border-radius:5px;
+  letter-spacing:0.05em;
+}
+.field-action{
+  font-size:11px;
+  color:var(--accent);
+  cursor:pointer;
+  font-weight:500;
+  user-select:none;
+}
+.field-action:hover{
+  text-decoration:underline;
+}
+
+/* Name input */
+input.name-input{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:11px 14px;
+  font-size:15px;
+  font-family:inherit;
+  color:var(--text);
+  font-weight:400;
+  transition:border-color 0.15s,box-shadow 0.15s;
+  outline:none;
+  -webkit-appearance:none;
+}
+input.name-input::placeholder{color:var(--text3)}
+input.name-input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(0,113,227,0.12);
+}
+
+/* DateTime row */
+.dt-row{
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;
+  flex-wrap:nowrap;
+}
+.dt-sep{color:var(--text3);font-size:14px;font-weight:300;user-select:none}
+.dt-spacer{width:10px;flex-shrink:0}
+
+@media(max-width: 480px){
+  .page {
+    padding: 20px 12px 40px;
+  }
+  .card {
+    padding: 18px 14px;
+    margin-bottom: 12px;
+  }
+  .dt-row {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 2px;
+  }
+  .dt-spacer {
+    width: 6px;
+    height: auto;
+    margin: 0;
+  }
+  input.dt {
+    font-size: 12px !important;
+    padding: 7px 0 !important;
+  }
+  input.dt.w-date{width:90px !important}
+  input.dt.w-time{width:75px !important}
+  .dt-sep {
+    font-size: 11px;
+  }
+  .btn-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+  .header {
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+}
+input.dt{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--text);
+  font-family:'Inter',monospace;
+  font-size:15px;
+  font-weight:400;
+  padding:10px 0;
+  text-align:center;
+  outline:none;
+  transition:border-color 0.15s,box-shadow 0.15s;
+  -webkit-appearance:none;
+  -moz-appearance:textfield;
+  appearance:textfield;
+}
+input.dt::-webkit-inner-spin-button,
+input.dt::-webkit-outer-spin-button{-webkit-appearance:none}
+input.dt:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(0,113,227,0.12);
+}
+input.dt.w-date{width:110px}
+input.dt.w-time{width:90px}
+
+/* Divider */
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* Status pill */
+.status-area{margin-top:0;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.status-label{font-size:12px;font-weight:500;color:var(--text2)}
+.status-pill{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:100px;
+  padding:6px 14px 6px 10px;
+  transition:all 0.2s;
+}
+.status-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--text3);
+  flex-shrink:0;
+  transition:background 0.2s;
+}
+.status-pill.state-ok .status-dot{background:var(--green)}
+.status-pill.state-fast .status-dot{background:var(--red)}
+.status-pill.state-slow .status-dot{background:var(--yellow)}
+.status-text{
+  font-size:13px;font-weight:500;
+  color:var(--text2);
+  transition:color 0.2s;
+  font-variant-numeric:tabular-nums;
+}
+.status-pill.state-ok .status-text{color:var(--green)}
+.status-pill.state-fast .status-text{color:var(--red)}
+.status-pill.state-slow .status-text{color:var(--yellow)}
+
+/* Result box */
+.result-box{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:14px 16px;
+}
+.result-box-label{
+  font-size:11px;font-weight:600;
+  color:var(--text3);
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+.result-box-value{
+  font-size:22px;
+  font-weight:500;
+  color:var(--text);
+  letter-spacing:-0.3px;
+  font-variant-numeric:tabular-nums;
+}
+
+/* Buttons */
+.btn-row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.btn{
+  font-family:inherit;
+  font-size:14px;
+  font-weight:500;
+  padding:10px 20px;
+  border-radius:100px;
+  border:none;
+  cursor:pointer;
+  transition:all 0.15s;
+  outline:none;
+  letter-spacing:-0.1px;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-primary:active{transform:scale(0.97)}
+.btn-ghost{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  color:var(--text2);
+}
+.btn-ghost:hover{border-color:var(--text3);color:var(--text)}
+.btn-ghost:active{transform:scale(0.97)}
+
+/* Converter Area */
+.converter-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:16px;
+}
+.config-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media(max-width: 580px) {
+  .config-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+
+.conv-card{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:16px;
+}
+.conv-title{
+  font-size:11px;
+  font-weight:600;
+  color:var(--text3);
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  margin-bottom:12px;
+}
+.conv-result{
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px dashed var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.conv-val{
+  font-size:16px;
+  font-weight:600;
+  color:var(--accent);
+  font-family:monospace;
+}
+.conv-copy{
+  font-size:11px;
+  color:var(--text2);
+  cursor:pointer;
+  background:var(--surface);
+  border:1px solid var(--border);
+  padding:3px 8px;
+  border-radius:4px;
+  user-select:none;
+}
+.conv-copy:hover{
+  background:var(--accent);
+  color:#fff;
+  border-color:var(--accent);
+}
+
+/* Log */
+.log-empty{
+  text-align:center;
+  padding:32px 0;
+  font-size:14px;
+  color:var(--text3);
+}
+.log-item{
+  padding:14px 0;
+  border-bottom:1px solid var(--border);
+  animation:slideIn 0.25s ease;
+  position: relative;
+}
+.log-item:last-child{border-bottom:none}
+@keyframes slideIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.log-item-head{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:5px;
+  padding-right:30px;
+}
+.log-cam-name{font-size:14px;font-weight:500;color:var(--text)}
+.log-badge{
+  font-size:11px;font-weight:600;
+  padding:3px 10px;border-radius:100px;
+  letter-spacing:0.02em;
+}
+.log-badge.ok{background:rgba(40,167,69,0.12);color:var(--green)}
+.log-badge.fast{background:rgba(255,59,48,0.12);color:var(--red)}
+.log-badge.slow{background:rgba(255,149,0,0.12);color:var(--yellow)}
+.log-item-detail{
+  font-size:12px;color:var(--text2);line-height:1.7;
+}
+.log-header-row{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:16px;
+}
+.log-delete-btn{
+  position:absolute;
+  right:0;
+  top:12px;
+  background:transparent;
+  border:none;
+  color:var(--text3);
+  cursor:pointer;
+  padding:4px;
+  font-size:16px;
+  line-height:1;
+}
+.log-delete-btn:hover{
+  color:var(--red);
+}
+
+/* Footer */
+footer{
+  text-align:center;
+  padding:28px 0 0;
+  font-size:12px;
+  color:var(--text3);
+  letter-spacing:0.02em;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <img src="logo.png" class="header-logo" alt="Logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' width=\'52\' height=\'52\'><rect width=\'24\' height=\'24\' rx=\'12\' fill=\'%230071e3\'/><path d=\'M12 5c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z\' fill=\'white\'/></svg>'"/>
+    <div class="header-text">
+      <h1>Tính Giờ Lệch Camera</h1>
+      <p>Hỗ trợ tính toán chính xác sai lệch thời gian của hệ thống camera</p>
+    </div>
+  </div>
+
+  <!-- Card 1: Cấu hình độ lệch -->
+  <div class="card">
+    <div class="card-title">Cấu hình độ lệch</div>
+
+    <div class="field">
+      <div class="field-label">
+        <span class="field-label-text">Tên camera / vị trí</span>
+      </div>
+      <input type="text" class="name-input" placeholder="Ví dụ: Camera cổng chính, Cam 02..." id="cam-name-input"/>
+    </div>
+
+    <div class="config-grid">
+      <div class="field">
+        <div class="field-label">
+          <span class="field-label-text">Thời gian thực tế (Chuẩn) <span class="badge">REAL</span></span>
+          <span class="field-action" id="btn-fill-real-now">Lấy giờ hiện tại</span>
+        </div>
+        <div class="dt-row" id="real-time-row">
+          <input type="text" class="dt w-date" maxlength="10" placeholder="DD/MM/YYYY" id="real-date" pattern="[0-9/]*" inputmode="numeric"/>
+          <div class="dt-spacer"></div>
+          <input type="text" class="dt w-time" maxlength="8" placeholder="hh:mm:ss" id="real-time" pattern="[0-9:]*" inputmode="numeric"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span class="field-label-text">Thời gian hiển thị trên Camera <span class="badge" style="color:var(--red)">CAMERA</span></span>
+        </div>
+        <div class="dt-row" id="cam-time-row">
+          <input type="text" class="dt w-date" maxlength="10" placeholder="DD/MM/YYYY" id="cam-date" pattern="[0-9/]*" inputmode="numeric"/>
+          <div class="dt-spacer"></div>
+          <input type="text" class="dt w-time" maxlength="8" placeholder="hh:mm:ss" id="cam-time" pattern="[0-9:]*" inputmode="numeric"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="status-area">
+      <span class="status-label">Trạng thái</span>
+      <div class="status-pill state-ok" id="status-pill">
+        <div class="status-dot"></div>
+        <span class="status-text" id="status-text">Đúng giờ</span>
+      </div>
+    </div>
+
+    <div class="result-box">
+      <div class="result-box-label">Độ lệch thời gian (Giờ : Phút : Giây)</div>
+      <div class="result-box-value" id="result-offset">00:00:00</div>
+    </div>
+  </div>
+
+  <!-- Card 2: Quy đổi thời gian -->
+  <div class="card">
+    <div class="card-title">Quy đổi thời gian (Thời gian thực)</div>
+    
+    <div class="converter-grid">
+      <!-- Convert Real -> Cam -->
+      <div class="conv-card">
+        <div class="conv-title">Nhập giờ Thực tế xảy ra</div>
+        <div class="dt-row" id="conv-card-real-row">
+          <input type="text" class="dt w-date" maxlength="10" placeholder="DD/MM/YYYY" id="conv-real-date" pattern="[0-9/]*" inputmode="numeric"/>
+          <div class="dt-spacer"></div>
+          <input type="text" class="dt w-time" maxlength="8" placeholder="hh:mm:ss" id="conv-real-time" pattern="[0-9:]*" inputmode="numeric"/>
+        </div>
+        <div class="conv-result">
+          <span style="font-size:12px;color:var(--text2)">Thời gian CAMERA:</span>
+          <span class="conv-val" id="conv-cam-val" style="color:var(--red)">--/--/---- --:--:--</span>
+          <span class="conv-copy" id="btn-copy-cam" style="display:none">Copy</span>
+        </div>
+      </div>
+
+      <!-- Convert Cam -> Real -->
+      <div class="conv-card">
+        <div class="conv-title">Nhập giờ Camera hiển thị</div>
+        <div class="dt-row" id="conv-card-cam-row">
+          <input type="text" class="dt w-date" maxlength="10" placeholder="DD/MM/YYYY" id="conv-cam-date" pattern="[0-9/]*" inputmode="numeric"/>
+          <div class="dt-spacer"></div>
+          <input type="text" class="dt w-time" maxlength="8" placeholder="hh:mm:ss" id="conv-cam-time" pattern="[0-9:]*" inputmode="numeric"/>
+        </div>
+        <div class="conv-result">
+          <span style="font-size:12px;color:var(--text2)">Thời gian THỰC TẾ:</span>
+          <span class="conv-val" id="conv-real-val">--/--/---- --:--:--</span>
+          <span class="conv-copy" id="btn-copy-real" style="display:none">Copy</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nút Hành động -->
+  <div class="btn-row" style="justify-content: center; margin-bottom: 20px;">
+    <button class="btn btn-primary" id="btn-save-log">Lưu nhật ký</button>
+    <button class="btn btn-ghost" id="btn-reset-inputs">Đặt lại</button>
+  </div>
+
+  <!-- Card 3: Nhật ký -->
+  <div class="card">
+    <div class="log-header-row">
+      <div class="card-title" style="margin-bottom:0">Nhật ký đã đối chiếu</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" id="btn-export-csv">Xuất CSV</button>
+        <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;color:var(--red)" id="btn-clear-logs">Xóa hết</button>
+      </div>
+    </div>
+
+    <div id="log-list">
+      <!-- Empty state initially -->
+      <div class="log-empty" id="log-empty-state">Chưa có nhật ký nào được lưu</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 Camera Time Calculator. Phan Lê Tự Lập - 0967611112</p>
+  </footer>
+</div>
+
+<script>
+// Time offset store (in seconds)
+let globalOffsetSeconds = 0;
+let logs = [];
+
+// DOM Elements
+const elRealDate = document.getElementById('real-date');
+const elRealTime = document.getElementById('real-time');
+
+const elCamDate = document.getElementById('cam-date');
+const elCamTime = document.getElementById('cam-time');
+
+const elNameInput = document.getElementById('cam-name-input');
+const elStatusPill = document.getElementById('status-pill');
+const elStatusText = document.getElementById('status-text');
+const elResultOffset = document.getElementById('result-offset');
+
+// Converter elements
+const elConvCamDate = document.getElementById('conv-cam-date');
+const elConvCamTime = document.getElementById('conv-cam-time');
+const elConvRealVal = document.getElementById('conv-real-val');
+const elBtnCopyReal = document.getElementById('btn-copy-real');
+
+const elConvRealDate = document.getElementById('conv-real-date');
+const elConvRealTime = document.getElementById('conv-real-time');
+const elConvCamVal = document.getElementById('conv-cam-val');
+const elBtnCopyCam = document.getElementById('btn-copy-cam');
+
+// Initialize logs from LocalStorage
+try {
+  const savedLogs = localStorage.getItem('cam_time_logs');
+  if (savedLogs) {
+    logs = JSON.parse(savedLogs);
+    renderLogs();
+  }
+} catch (e) {
+  console.error("Lỗi đọc LocalStorage", e);
+}
+
+// Auto formatting and jumping to next input
+function setupDateInputFormatting(input, nextInput) {
+  input.addEventListener('input', (e) => {
+    let val = input.value.replace(/[^0-9]/g, '');
+    if (val.length > 4) {
+      val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
+    } else if (val.length > 2) {
+      val = val.slice(0, 2) + '/' + val.slice(2);
+    }
+    input.value = val;
+
+    if (val.length >= 10 && nextInput) {
+      nextInput.focus();
+      nextInput.select();
+    }
+  });
+}
+
+function setupTimeInputFormatting(input) {
+  input.addEventListener('input', (e) => {
+    let val = input.value.replace(/[^0-9]/g, '');
+    if (val.length > 4) {
+      val = val.slice(0, 2) + ':' + val.slice(2, 4) + ':' + val.slice(4, 6);
+    } else if (val.length > 2) {
+      val = val.slice(0, 2) + ':' + val.slice(2);
+    }
+    input.value = val;
+  });
+}
+
+// Auto focus behavior for datetime inputs
+function setupAutoFocus(containerId) {
+  const container = document.getElementById(containerId);
+  const dateInput = container.querySelector('input.w-date');
+  const timeInput = container.querySelector('input.w-time');
+  
+  setupDateInputFormatting(dateInput, timeInput);
+  setupTimeInputFormatting(timeInput);
+
+  timeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && timeInput.value.length === 0) {
+      dateInput.focus();
+      dateInput.select();
+    }
+  });
+
+  [dateInput, timeInput].forEach(input => {
+    input.addEventListener('input', () => {
+      calculateOffset();
+    });
+    input.addEventListener('blur', () => {
+      if (input === timeInput && input.value.length > 0) {
+        const parts = input.value.split(':');
+        const hh = (parts[0] || '0').padStart(2, '0');
+        const mm = (parts[1] || '0').padStart(2, '0');
+        const ss = (parts[2] || '0').padStart(2, '0');
+        input.value = `${hh}:${mm}:${ss}`;
+      }
+      calculateOffset();
+    });
+  });
+
+  // Handle pasting inside the date input
+  dateInput.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const pasteText = (e.clipboardData || window.clipboardData).getData('text');
+    parseAndFill(pasteText, dateInput, timeInput);
+    calculateOffset();
+  });
+}
+
+setupAutoFocus('real-time-row');
+setupAutoFocus('cam-time-row');
+
+// Auto focus for converter inputs
+function setupConverterFocus(containerId, callback) {
+  const container = document.getElementById(containerId);
+  const dateInput = container.querySelector('input.w-date');
+  const timeInput = container.querySelector('input.w-time');
+  
+  setupDateInputFormatting(dateInput, timeInput);
+  setupTimeInputFormatting(timeInput);
+
+  timeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && timeInput.value.length === 0) {
+      dateInput.focus();
+      dateInput.select();
+    }
+  });
+
+  [dateInput, timeInput].forEach(input => {
+    input.addEventListener('input', () => {
+      callback();
+    });
+    input.addEventListener('blur', () => {
+      if (input === timeInput && input.value.length > 0) {
+        const parts = input.value.split(':');
+        const hh = (parts[0] || '0').padStart(2, '0');
+        const mm = (parts[1] || '0').padStart(2, '0');
+        const ss = (parts[2] || '0').padStart(2, '0');
+        input.value = `${hh}:${mm}:${ss}`;
+      }
+      callback();
+    });
+  });
+
+  // Paste handler
+  dateInput.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const pasteText = (e.clipboardData || window.clipboardData).getData('text');
+    parseAndFill(pasteText, dateInput, timeInput);
+    callback();
+  });
+}
+
+setupConverterFocus('conv-card-cam-row', convertCamToReal);
+setupConverterFocus('conv-card-real-row', convertRealToCam);
+
+// Parse date-time string and distribute into inputs
+function parseAndFill(text, dateEl, timeEl) {
+  const nums = text.match(/\d+/g);
+  if (!nums) return;
+
+  if (nums.length >= 3) {
+    const dd = nums[0].padStart(2, '0');
+    const mm = nums[1].padStart(2, '0');
+    let yyyy = nums[2];
+    if (yyyy.length === 2) yyyy = '20' + yyyy;
+    yyyy = yyyy.padStart(4, '0');
+    dateEl.value = `${dd}/${mm}/${yyyy}`;
+  } else if (nums.length === 1 && nums[0].length === 8) {
+    const s = nums[0];
+    dateEl.value = `${s.slice(0,2)}/${s.slice(2,4)}/${s.slice(4,8)}`;
+  }
+
+  if (nums.length >= 6) {
+    const hh = nums[3].padStart(2, '0');
+    const mm = nums[4].padStart(2, '0');
+    const ss = nums[5].padStart(2, '0');
+    timeEl.value = `${hh}:${mm}:${ss}`;
+  } else if (nums.length >= 5) {
+    const hh = nums[3].padStart(2, '0');
+    const mm = nums[4].padStart(2, '0');
+    timeEl.value = `${hh}:${mm}:00`;
+  }
+}
+
+// Convert DD/MM/YYYY hh:mm:ss inputs into Date object
+function getDateFromInputs(dateEl, timeEl) {
+  const dateStr = dateEl.value.trim();
+  const dateParts = dateStr.split('/');
+  if (dateParts.length !== 3) return null;
+  const day = parseInt(dateParts[0], 10);
+  const month = parseInt(dateParts[1], 10) - 1;
+  const year = parseInt(dateParts[2], 10);
+
+  const timeStr = timeEl.value.trim();
+  const timeParts = timeStr.split(':');
+  const hour = parseInt(timeParts[0], 10) || 0;
+  const minute = parseInt(timeParts[1], 10) || 0;
+  const second = parseInt(timeParts[2], 10) || 0;
+
+  if (!day || month === undefined || !year) return null;
+  
+  const date = new Date(year, month, day, hour, minute, second);
+  if (isNaN(date.getTime()) || date.getDate() !== day || date.getMonth() !== month || date.getFullYear() !== year) {
+    return null;
+  }
+  return date;
+}
+
+// Helper to format Date to DD/MM/YYYY hh:mm:ss
+function formatDate(date) {
+  if (!date) return '--/--/---- --:--:--';
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  const hh = String(date.getHours()).padStart(2, '0');
+  const ii = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  return `${dd}/${mm}/${yyyy} ${hh}:${ii}:${ss}`;
+}
+
+// Populate input fields with a Date object
+function fillInputsFromDate(date, dateEl, timeEl) {
+  if (!date) return;
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  dateEl.value = `${dd}/${mm}/${yyyy}`;
+
+  const hh = String(date.getHours()).padStart(2, '0');
+  const ii = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  timeEl.value = `${hh}:${ii}:${ss}`;
+}
+
+// Fill Current Real Time
+document.getElementById('btn-fill-real-now').addEventListener('click', () => {
+  const now = new Date();
+  fillInputsFromDate(now, elRealDate, elRealTime);
+  fillInputsFromDate(now, elCamDate, elCamTime);
+  calculateOffset();
+});
+
+function calculateOffset() {
+  const realDate = getDateFromInputs(elRealDate, elRealTime);
+  const camDate = getDateFromInputs(elCamDate, elCamTime);
+
+  if (!realDate || !camDate) {
+    elStatusPill.className = 'status-pill';
+    elStatusText.textContent = 'Nhập đủ thời gian';
+    elResultOffset.textContent = '--:--:--';
+    globalOffsetSeconds = 0;
+    return;
+  }
+
+  const diffMs = camDate.getTime() - realDate.getTime();
+  const diffSec = Math.round(diffMs / 1000);
+  globalOffsetSeconds = diffSec;
+
+  const absDiff = Math.abs(diffSec);
+  const days = Math.floor(absDiff / 86400);
+  const hours = Math.floor((absDiff % 86400) / 3600);
+  const minutes = Math.floor((absDiff % 3600) / 60);
+  const seconds = absDiff % 60;
+
+  let formatStr = '';
+  if (days > 0) formatStr += `${days}d `;
+  formatStr += `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+  elResultOffset.textContent = (diffSec < 0 ? '- ' : '+ ') + formatStr;
+
+  if (diffSec === 0) {
+    elStatusPill.className = 'status-pill state-ok';
+    elStatusText.textContent = 'Đúng giờ (0s)';
+  } else if (diffSec > 0) {
+    elStatusPill.className = 'status-pill state-fast';
+    elStatusText.textContent = `Nhanh ${formatDurationFriendly(absDiff)}`;
+  } else {
+    elStatusPill.className = 'status-pill state-slow';
+    elStatusText.textContent = `Chậm ${formatDurationFriendly(absDiff)}`;
+  }
+
+  convertCamToReal();
+  convertRealToCam();
+}
+
+function formatDurationFriendly(totalSeconds) {
+  const d = Math.floor(totalSeconds / 86400);
+  const h = Math.floor((totalSeconds % 86400) / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  
+  let parts = [];
+  if (d > 0) parts.push(`${d} ngày`);
+  if (h > 0) parts.push(`${h} giờ`);
+  if (m > 0) parts.push(`${m} phút`);
+  if (s > 0 || parts.length === 0) parts.push(`${s} giây`);
+  return parts.join(' ');
+}
+
+function convertCamToReal() {
+  const camDate = getDateFromInputs(elConvCamDate, elConvCamTime);
+  if (!camDate) {
+    elConvRealVal.textContent = '--/--/---- --:--:--';
+    elBtnCopyReal.style.display = 'none';
+    return;
+  }
+  const realTimeMs = camDate.getTime() - (globalOffsetSeconds * 1000);
+  const realDate = new Date(realTimeMs);
+  elConvRealVal.textContent = formatDate(realDate);
+  elBtnCopyReal.style.display = 'inline-block';
+}
+
+function convertRealToCam() {
+  const realDate = getDateFromInputs(elConvRealDate, elConvRealTime);
+  if (!realDate) {
+    elConvCamVal.textContent = '--/--/---- --:--:--';
+    elBtnCopyCam.style.display = 'none';
+    return;
+  }
+  const camTimeMs = realDate.getTime() + (globalOffsetSeconds * 1000);
+  const camDate = new Date(camTimeMs);
+  elConvCamVal.textContent = formatDate(camDate);
+  elBtnCopyCam.style.display = 'inline-block';
+}
+
+function triggerConvert() {
+  convertCamToReal();
+  convertRealToCam();
+}
+
+function setupCopyToClipboard(btnEl, textEl) {
+  btnEl.addEventListener('click', () => {
+    const text = textEl.textContent;
+    if (text && !text.includes('--')) {
+      navigator.clipboard.writeText(text).then(() => {
+        const oldText = btnEl.textContent;
+        btnEl.textContent = 'Đã Copy!';
+        setTimeout(() => {
+          btnEl.textContent = oldText;
+        }, 1000);
+      });
+    }
+  });
+}
+setupCopyToClipboard(elBtnCopyReal, elConvRealVal);
+setupCopyToClipboard(elBtnCopyCam, elConvCamVal);
+
+document.getElementById('btn-reset-inputs').addEventListener('click', () => {
+  const inputs = document.querySelectorAll('.card input');
+  inputs.forEach(input => input.value = '');
+  calculateOffset();
+});
+
+document.getElementById('btn-save-log').addEventListener('click', () => {
+  const camName = elNameInput.value.trim() || 'Camera không tên';
+  const realDate = getDateFromInputs(elRealDate, elRealTime);
+  const camDate = getDateFromInputs(elCamDate, elCamTime);
+
+  if (!realDate || !camDate) {
+    alert('Vui lòng nhập đầy đủ và chính xác thông tin thời gian trước khi lưu!');
+    return;
+  }
+
+  const convRealInput = getDateFromInputs(elConvRealDate, elConvRealTime);
+  const convRealOutput = convRealInput ? elConvCamVal.textContent : '';
+
+  const convCamInput = getDateFromInputs(elConvCamDate, elConvCamTime);
+  const convCamOutput = convCamInput ? elConvRealVal.textContent : '';
+
+  const log = {
+    id: Date.now(),
+    name: camName,
+    realTime: formatDate(realDate),
+    camTime: formatDate(camDate),
+    offset: globalOffsetSeconds,
+    convRealInput: convRealInput ? formatDate(convRealInput) : '',
+    convRealOutput: convRealOutput,
+    convCamInput: convCamInput ? formatDate(convCamInput) : '',
+    convCamOutput: convCamOutput
+  };
+
+  logs.unshift(log);
+  localStorage.setItem('cam_time_logs', JSON.stringify(logs));
+  renderLogs();
+  
+  const saveBtn = document.getElementById('btn-save-log');
+  const oldText = saveBtn.textContent;
+  saveBtn.textContent = 'Đã lưu!';
+  saveBtn.style.background = 'var(--green)';
+  setTimeout(() => {
+    saveBtn.textContent = oldText;
+    saveBtn.style.background = 'var(--accent)';
+  }, 1000);
+});
+
+document.getElementById('btn-clear-logs').addEventListener('click', () => {
+  if (confirm('Bạn có chắc chắn muốn xóa tất cả lịch sử nhật ký không?')) {
+    logs = [];
+    localStorage.removeItem('cam_time_logs');
+    renderLogs();
+  }
+});
+
+window.deleteLog = function(id) {
+  logs = logs.filter(log => log.id !== id);
+  localStorage.setItem('cam_time_logs', JSON.stringify(logs));
+  renderLogs();
+};
+
+function renderLogs() {
+  const logList = document.getElementById('log-list');
+  const emptyState = document.getElementById('log-empty-state');
+  
+  const items = logList.querySelectorAll('.log-item');
+  items.forEach(item => item.remove());
+
+  if (logs.length === 0) {
+    emptyState.style.display = 'block';
+    return;
+  }
+
+  emptyState.style.display = 'none';
+
+  logs.forEach(log => {
+    const item = document.createElement('div');
+    item.className = 'log-item';
+    
+    const absOffset = Math.abs(log.offset);
+    let badgeClass = 'ok';
+    let badgeText = 'Đúng giờ';
+    let offsetSign = '';
+
+    if (log.offset > 0) {
+      badgeClass = 'fast';
+      badgeText = `Nhanh ${formatDurationFriendly(absOffset)}`;
+      offsetSign = '+';
+    } else if (log.offset < 0) {
+      badgeClass = 'slow';
+      badgeText = `Chậm ${formatDurationFriendly(absOffset)}`;
+      offsetSign = '-';
+    }
+
+    const durationText = formatDurationFriendly(absOffset);
+
+    let conversionDetails = '';
+    if (log.convRealInput || log.convCamInput) {
+      if (log.convRealInput) {
+        conversionDetails += `• Quy đổi Thực tế ➔ Camera: Thực tế <b>${log.convRealInput}</b> ➔ Camera <b style="color:var(--red)">${log.convRealOutput}</b><br/>`;
+      }
+      if (log.convCamInput) {
+        conversionDetails += `• Quy đổi Camera ➔ Thực tế: Camera <b>${log.convCamInput}</b> ➔ Thực tế <b style="color:var(--accent)">${log.convCamOutput}</b><br/>`;
+      }
+    } else {
+      conversionDetails += `• Quy đổi nhanh: Thực tế <b>${log.realTime}</b> ➔ Camera <b style="color:var(--red)">${log.camTime}</b> (hoặc ngược lại)`;
+    }
+
+    item.innerHTML = `
+      <div class="log-item-head">
+        <span class="log-cam-name">${escapeHtml(log.name)}</span>
+        <span class="log-badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div class="log-item-detail">
+        • Thời điểm đối so sánh: Thực tế <b>${log.realTime}</b> vs Camera <b>${log.camTime}</b><br/>
+        • Độ lệch: <b>${offsetSign}${formatDurationHHMMSS(absOffset)}</b><br/>
+        ${conversionDetails}
+      </div>
+      <button class="log-delete-btn" onclick="deleteLog(${log.id})" title="Xóa">&times;</button>
+    `;
+    logList.appendChild(item);
+  });
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+function formatDurationHHMMSS(absSec) {
+  const h = Math.floor(absSec / 3600);
+  const m = Math.floor((absSec % 3600) / 60);
+  const s = absSec % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+document.getElementById('btn-export-csv').addEventListener('click', () => {
+  if (logs.length === 0) {
+    alert('Không có dữ liệu nhật ký để xuất!');
+    return;
+  }
+  
+  let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+  csvContent += "Tên Camera,Thời gian thực,Thời gian Camera,Độ lệch (giây),Trạng thái\n";
+
+  logs.forEach(log => {
+    let statusText = 'Đúng giờ';
+    if (log.offset > 0) statusText = `Nhanh ${log.offset}s`;
+    else if (log.offset < 0) statusText = `Chậm ${Math.abs(log.offset)}s`;
+    
+    const row = `"${log.name.replace(/"/g, '""')}","${log.realTime}","${log.camTime}",${log.offset},"${statusText}"`;
+    csvContent += row + "\n";
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `Nhat_ky_lech_camera_${Date.now()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
+
+// Auto-populate current date/time on load for the first 2 rows only
+const initNow = new Date();
+fillInputsFromDate(initNow, elRealDate, elRealTime);
+fillInputsFromDate(initNow, elCamDate, elCamTime);
+calculateOffset();
+</script>
+</body>
+</html>
