@@ -40,7 +40,7 @@ class ErrorBoundary extends Component {
   }
 }
 
-const CLASSIFICATIONS = ["CS", "ĐT1", "ĐT2", "ĐT3", "DD", "HT"];
+const CLASSIFICATIONS = ["CSBM", "ĐT1", "ĐT2", "ĐT3", "CTVDD", "HTBM"];
 
 const STATUS_LIST = [
   { value: "hoat_dong", label: "Hoạt động", color: "#22C55E" },
@@ -88,7 +88,7 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
       ...item,
       // Map status fallback
       status: item.status === "tam_khoa" ? "tam_ngung" : (item.status === "ngung_hoat_dong" ? "dung_hoat_dong" : (item.status || "hoat_dong")),
-      classification: item.classification || "CS"
+      classification: item.classification || "CSBM"
     }));
   }, [data["collaborators"]]);
 
@@ -118,12 +118,12 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
 
   // Statistics counters
   const total = items.length;
-  const countCS = items.filter(i => i.classification === "CS").length;
+  const countCS = items.filter(i => i.classification === "CSBM" || i.classification === "CS").length;
   const countĐT1 = items.filter(i => i.classification === "ĐT1").length;
   const countĐT2 = items.filter(i => i.classification === "ĐT2").length;
   const countĐT3 = items.filter(i => i.classification === "ĐT3").length;
-  const countDD = items.filter(i => i.classification === "DD").length;
-  const countHT = items.filter(i => i.classification === "HT").length;
+  const countDD = items.filter(i => i.classification === "CTVDD" || i.classification === "DD").length;
+  const countHT = items.filter(i => i.classification === "HTBM" || i.classification === "HT").length;
 
   const filtered = useMemo(() => {
     let list = [...items];
@@ -235,20 +235,24 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
         />
       </div>
 
-      {/* KPI Stats Cards containing requested metrics: Tổng, CS, ĐT1, ĐT2, ĐT3, DD, HT */}
+      {/* KPI Stats Cards containing requested metrics: Tổng, CSBM, ĐT1, ĐT2, ĐT3, CTVDD, HTBM */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(7,1fr)", gap: 10, marginBottom: 20 }}>
         {[
-          { label: "Tổng số CTV", value: total, color: "#1E293B", bg: "linear-gradient(135deg,#F8FAFC,#F1F5F9)", border: "#CBD5E1" },
-          { label: "Cơ sở (CS)", value: countCS, color: "#2563EB", bg: "linear-gradient(135deg,#EFF6FF,#DBEAFE)", border: "#BFDBFE" },
-          { label: "Đối tượng 1 (ĐT1)", value: countĐT1, color: "#DC2626", bg: "linear-gradient(135deg,#FEF2F2,#FEE2E2)", border: "#FECACA" },
-          { label: "Đối tượng 2 (ĐT2)", value: countĐT2, color: "#D97706", bg: "linear-gradient(135deg,#FFFBEB,#FEF3C7)", border: "#FDE68A" },
-          { label: "Đối tượng 3 (ĐT3)", value: countĐT3, color: "#4F46E5", bg: "linear-gradient(135deg,#EEF2FF,#E0E7FF)", border: "#C7D2FE" },
-          { label: "Dẫn dắt (DD)", value: countDD, color: "#0D9488", bg: "linear-gradient(135deg,#F0FDF4,#CCFBF1)", border: "#99F6E4" },
-          { label: "Hỗ trợ (HT)", value: countHT, color: "#0891B2", bg: "linear-gradient(135deg,#ECFEFF,#CFFAFE)", border: "#A5F3FC" }
+          { label: "Tổng số CTV", value: total, color: "#1E293B", bg: "linear-gradient(135deg,#F8FAFC,#F1F5F9)", border: "#CBD5E1", icon: "👥" },
+          { label: "Cơ sở (CSBM)", value: countCS, color: "#2563EB", bg: "linear-gradient(135deg,#EFF6FF,#DBEAFE)", border: "#BFDBFE", icon: "👤" },
+          { label: "Đặc tình 1 (ĐT1)", value: countĐT1, color: "#DC2626", bg: "linear-gradient(135deg,#FEF2F2,#FEE2E2)", border: "#FECACA", icon: "👤⭐" },
+          { label: "Đặc tình 2 (ĐT2)", value: countĐT2, color: "#D97706", bg: "linear-gradient(135deg,#FFFBEB,#FEF3C7)", border: "#FDE68A", icon: "👤⭐⭐" },
+          { label: "Đặc tình 3 (ĐT3)", value: countĐT3, color: "#4F46E5", bg: "linear-gradient(135deg,#EEF2FF,#E0E7FF)", border: "#C7D2FE", icon: "👤⭐⭐⭐" },
+          { label: "Danh dự (CTVDD)", value: countDD, color: "#0D9488", bg: "linear-gradient(135deg,#F0FDF4,#CCFBF1)", border: "#99F6E4", icon: "🤝" },
+          { label: "Hộp thư (HTBM)", value: countHT, color: "#0891B2", bg: "linear-gradient(135deg,#ECFEFF,#CFFAFE)", border: "#A5F3FC", icon: "📬" }
         ].map((k, idx) => (
-          <div key={idx} style={{ padding: 12, background: k.bg, borderRadius: 12, border: `1px solid ${k.border}`, boxShadow: "0 2px 4px rgba(0,0,0,0.01)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#64748B", textTransform: "uppercase", lineHeight: 1.2 }}>{k.label}</span>
-            <div style={{ fontSize: 22, fontWeight: 900, color: k.color, marginTop: 6 }}>{k.value}</div>
+          <div key={idx} style={{ position: "relative", overflow: "hidden", padding: "14px 12px", background: k.bg, borderRadius: 12, border: `1px solid ${k.border}`, boxShadow: "0 2px 4px rgba(0,0,0,0.01)", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: "80px" }}>
+            {/* Watermark Icon */}
+            <div style={{ position: "absolute", right: "-6px", bottom: "-10px", fontSize: "38px", opacity: 0.12, pointerEvents: "none", userSelect: "none" }}>
+              {k.icon}
+            </div>
+            <span style={{ fontSize: "10.5px", fontWeight: 700, color: "#64748B", textTransform: "uppercase", lineHeight: 1.25, position: "relative", zIndex: 2 }}>{k.label}</span>
+            <div style={{ fontSize: "24px", fontWeight: 900, color: k.color, marginTop: 4, position: "relative", zIndex: 2 }}>{k.value}</div>
           </div>
         ))}
       </div>
