@@ -48,6 +48,25 @@ const STATUS_LIST = [
   { value: "dung_hoat_dong", label: "Dừng hoạt động", color: "#EF4444" }
 ];
 
+const getCompetenceBadge = (comp) => {
+  const c = String(comp || "Khá").trim();
+  let bg = "#F1F5F9", color = "#475569", border = "#CBD5E1";
+  if (c === "Xuất sắc") {
+    bg = "#F5F3FF"; color = "#7C3AED"; border = "#DDD6FE";
+  } else if (c === "Tốt") {
+    bg = "#EFF6FF"; color = "#2563EB"; border = "#BFDBFE";
+  } else if (c === "Khá") {
+    bg = "#FFFBEB"; color = "#D97706"; border = "#FDE68A";
+  } else if (c === "Kém") {
+    bg = "#FEF2F2"; color = "#DC2626"; border = "#FECACA";
+  }
+  return (
+    <span style={{ background: bg, color: color, border: `1px solid ${border}`, padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
+      {c}
+    </span>
+  );
+};
+
 const HUE_WARRENTS = [
   "Phường Thuận Hoà",
   "Phường Phú Xuân",
@@ -88,7 +107,8 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
       ...item,
       // Map status fallback
       status: item.status === "tam_khoa" ? "tam_ngung" : (item.status === "ngung_hoat_dong" ? "dung_hoat_dong" : (item.status || "hoat_dong")),
-      classification: item.classification || "CSBM"
+      classification: item.classification || "CSBM",
+      competence: item.competence || "Khá"
     }));
   }, [data["collaborators"]]);
 
@@ -139,7 +159,18 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
     }
     if (filterNoiO !== "all") list = list.filter((i) => i.address && i.address.includes(filterNoiO));
     if (filterCanBo !== "all") list = list.filter((i) => i.managing_officer && i.managing_officer.includes(filterCanBo));
-    if (filterClass !== "all") list = list.filter((i) => i.classification === filterClass);
+    
+    if (filterClass !== "all") {
+      if (filterClass === "CSBM") {
+        list = list.filter((i) => i.classification === "CSBM" || i.classification === "CS");
+      } else if (filterClass === "CTVDD") {
+        list = list.filter((i) => i.classification === "CTVDD" || i.classification === "DD");
+      } else if (filterClass === "HTBM") {
+        list = list.filter((i) => i.classification === "HTBM" || i.classification === "HT");
+      } else {
+        list = list.filter((i) => i.classification === filterClass);
+      }
+    }
 
     if (sortBy === "moi_nhat") {
       list.sort((a, b) => (b.id || 0) - (a.id || 0));
@@ -169,7 +200,8 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
       lng: parseFloat(form.lng) || 107.5909,
       coverage_radius: parseInt(form.coverage_radius) || 500,
       status: form.status || "hoat_dong",
-      classification: form.classification || "CS"
+      classification: form.classification || "CSBM",
+      competence: form.competence || "Khá"
     };
     
     let nd;
@@ -238,23 +270,51 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
       {/* KPI Stats Cards containing requested metrics: Tổng, CSBM, ĐT1, ĐT2, ĐT3, CTVDD, HTBM */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(7,1fr)", gap: 10, marginBottom: 20 }}>
         {[
-          { label: "Tổng số CTV", value: total, color: "#1E293B", bg: "linear-gradient(135deg,#F8FAFC,#F1F5F9)", border: "#CBD5E1", icon: "👥" },
-          { label: "Cơ sở (CSBM)", value: countCS, color: "#2563EB", bg: "linear-gradient(135deg,#EFF6FF,#DBEAFE)", border: "#BFDBFE", icon: "👤" },
-          { label: "Đặc tình 1 (ĐT1)", value: countĐT1, color: "#DC2626", bg: "linear-gradient(135deg,#FEF2F2,#FEE2E2)", border: "#FECACA", icon: "👤⭐" },
-          { label: "Đặc tình 2 (ĐT2)", value: countĐT2, color: "#D97706", bg: "linear-gradient(135deg,#FFFBEB,#FEF3C7)", border: "#FDE68A", icon: "👤⭐⭐" },
-          { label: "Đặc tình 3 (ĐT3)", value: countĐT3, color: "#4F46E5", bg: "linear-gradient(135deg,#EEF2FF,#E0E7FF)", border: "#C7D2FE", icon: "👤⭐⭐⭐" },
-          { label: "Danh dự (CTVDD)", value: countDD, color: "#0D9488", bg: "linear-gradient(135deg,#F0FDF4,#CCFBF1)", border: "#99F6E4", icon: "🤝" },
-          { label: "Hộp thư (HTBM)", value: countHT, color: "#0891B2", bg: "linear-gradient(135deg,#ECFEFF,#CFFAFE)", border: "#A5F3FC", icon: "📬" }
-        ].map((k, idx) => (
-          <div key={idx} style={{ position: "relative", overflow: "hidden", padding: "14px 12px", background: k.bg, borderRadius: 12, border: `1px solid ${k.border}`, boxShadow: "0 2px 4px rgba(0,0,0,0.01)", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: "80px" }}>
-            {/* Watermark Icon */}
-            <div style={{ position: "absolute", right: "-6px", bottom: "-10px", fontSize: "38px", opacity: 0.12, pointerEvents: "none", userSelect: "none" }}>
-              {k.icon}
+          { label: "Tổng số CTV", value: total, color: "#1E293B", bg: "linear-gradient(135deg,#F8FAFC,#F1F5F9)", border: "#CBD5E1", icon: "👥", filter: "all" },
+          { label: "Cơ sở (CSBM)", value: countCS, color: "#2563EB", bg: "linear-gradient(135deg,#EFF6FF,#DBEAFE)", border: "#BFDBFE", icon: "👤", filter: "CSBM" },
+          { label: "Đặc tình 1 (ĐT1)", value: countĐT1, color: "#DC2626", bg: "linear-gradient(135deg,#FEF2F2,#FEE2E2)", border: "#FECACA", icon: "👤⭐", filter: "ĐT1" },
+          { label: "Đặc tình 2 (ĐT2)", value: countĐT2, color: "#D97706", bg: "linear-gradient(135deg,#FFFBEB,#FEF3C7)", border: "#FDE68A", icon: "👤⭐⭐", filter: "ĐT2" },
+          { label: "Đặc tình 3 (ĐT3)", value: countĐT3, color: "#4F46E5", bg: "linear-gradient(135deg,#EEF2FF,#E0E7FF)", border: "#C7D2FE", icon: "👤⭐⭐⭐", filter: "ĐT3" },
+          { label: "Danh dự (CTVDD)", value: countDD, color: "#0D9488", bg: "linear-gradient(135deg,#F0FDF4,#CCFBF1)", border: "#99F6E4", icon: "🤝", filter: "CTVDD" },
+          { label: "Hộp thư (HTBM)", value: countHT, color: "#0891B2", bg: "linear-gradient(135deg,#ECFEFF,#CFFAFE)", border: "#A5F3FC", icon: "📬", filter: "HTBM" }
+        ].map((k, idx) => {
+          const isSelected = k.filter === "all" ? filterClass === "all" : filterClass === k.filter;
+          return (
+            <div 
+              key={idx} 
+              onClick={() => {
+                if (k.filter === "all") {
+                  setFilterClass("all");
+                } else {
+                  setFilterClass(filterClass === k.filter ? "all" : k.filter);
+                }
+              }}
+              style={{ 
+                position: "relative", 
+                overflow: "hidden", 
+                padding: "14px 12px", 
+                background: k.bg, 
+                borderRadius: 12, 
+                border: isSelected ? `2px solid ${k.color}` : `1px solid ${k.border}`, 
+                boxShadow: isSelected ? `0 4px 12px ${k.color}25` : "0 2px 4px rgba(0,0,0,0.01)", 
+                display: "flex", 
+                flexDirection: "column", 
+                justifyContent: "space-between", 
+                minHeight: "80px",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                transform: isSelected ? "scale(1.03)" : "scale(1)"
+              }}
+            >
+              {/* Watermark Icon */}
+              <div style={{ position: "absolute", right: "-6px", bottom: "-10px", fontSize: "38px", opacity: 0.12, pointerEvents: "none", userSelect: "none" }}>
+                {k.icon}
+              </div>
+              <span style={{ fontSize: "10.5px", fontWeight: 700, color: "#64748B", textTransform: "uppercase", lineHeight: 1.25, position: "relative", zIndex: 2 }}>{k.label}</span>
+              <div style={{ fontSize: "24px", fontWeight: 900, color: k.color, marginTop: 4, position: "relative", zIndex: 2 }}>{k.value}</div>
             </div>
-            <span style={{ fontSize: "10.5px", fontWeight: 700, color: "#64748B", textTransform: "uppercase", lineHeight: 1.25, position: "relative", zIndex: 2 }}>{k.label}</span>
-            <div style={{ fontSize: "24px", fontWeight: 900, color: k.color, marginTop: 4, position: "relative", zIndex: 2 }}>{k.value}</div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Filter Row */}
@@ -305,9 +365,9 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
         <div style={{ display: "flex", gap: 6 }}>
           <button 
             onClick={() => {
-              const columns = ["Mã số", "Biệt danh", "Phân loại", "Địa chỉ", "Số điện thoại", "Cán bộ phụ trách", "Trạng thái"];
+              const columns = ["Mã số", "Biệt danh", "Phân loại", "Địa chỉ", "Năng lực", "Số điện thoại", "Cán bộ phụ trách", "Trạng thái"];
               const rows = filtered.map(i => [
-                i.ma_so, i.nickname, i.classification, i.address, i.phone || "—", i.managing_officer || "—", 
+                i.ma_so, i.nickname, i.classification, i.address, i.competence || "Khá", i.phone || "—", i.managing_officer || "—", 
                 i.status === "hoat_dong" ? "Hoạt động" : (i.status === "tam_ngung" ? "Tạm ngưng" : "Dừng HĐ")
               ]);
               exportToPrint({ title: "DANH SÁCH CỘNG TÁC VIÊN", columns, rows, currentUser });
@@ -318,9 +378,9 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
           </button>
           <button 
             onClick={() => {
-              const columns = ["Mã số", "Biệt danh", "Phân loại", "Địa chỉ", "Số điện thoại", "Cán bộ phụ trách", "Trạng thái"];
+              const columns = ["Mã số", "Biệt danh", "Phân loại", "Địa chỉ", "Năng lực", "Số điện thoại", "Cán bộ phụ trách", "Trạng thái"];
               const rows = filtered.map(i => [
-                i.ma_so, i.nickname, i.classification, i.address, i.phone || "—", i.managing_officer || "—", 
+                i.ma_so, i.nickname, i.classification, i.address, i.competence || "Khá", i.phone || "—", i.managing_officer || "—", 
                 i.status === "hoat_dong" ? "Hoạt động" : (i.status === "tam_ngung" ? "Tạm ngưng" : "Dừng HĐ")
               ]);
               exportToWord({ title: "DANH SÁCH CỘNG TÁC VIÊN", columns, rows, currentUser, filename: "danh_sach_ctv" });
@@ -342,15 +402,16 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
                 <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#475569" }}>Mã CTV / Biệt danh</th>
                 <th style={{ padding: "12px 16px", textAlign: "center", fontSize: 11, fontWeight: 700, color: "#475569", width: 100 }}>Phân loại</th>
                 <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#475569" }}>Địa chỉ hoạt động</th>
-                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#475569" }}>Cán bộ quản lý</th>
                 <th style={{ padding: "12px 16px", textAlign: "center", fontSize: 11, fontWeight: 700, color: "#475569" }}>Trạng thái</th>
+                <th style={{ padding: "12px 16px", textAlign: "center", fontSize: 11, fontWeight: 700, color: "#475569" }}>Năng lực</th>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#475569" }}>Cán bộ quản lý</th>
                 <th style={{ padding: "12px 16px", textAlign: "center", fontSize: 11, fontWeight: 700, color: "#475569", width: 140 }}>Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {paged.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ padding: 24, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
+                  <td colSpan={8} style={{ padding: 24, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
                     Không tìm thấy cộng tác viên nào
                   </td>
                 </tr>
@@ -410,6 +471,15 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
                           </button>
                         </div>
                       </td>
+                      <td style={{ padding: "10px 16px", textAlign: "center" }}>
+                        {/* Text-based colored statuses: hoạt động -> green, tạm ngưng -> orange, dừng hoạt động -> red */}
+                        <span style={{ color: badgeColor, fontSize: 12, fontWeight: 700 }}>
+                          ● {badgeText}
+                        </span>
+                      </td>
+                      <td style={{ padding: "10px 16px", textAlign: "center" }}>
+                        {getCompetenceBadge(item.competence)}
+                      </td>
                       <td style={{ padding: "10px 16px" }}>
                         {item.managing_officer ? (
                           <span 
@@ -421,12 +491,6 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
                         ) : (
                           <span style={{ color: "#94A3B8", fontSize: 12 }}>Chưa phân công</span>
                         )}
-                      </td>
-                      <td style={{ padding: "10px 16px", textAlign: "center" }}>
-                        {/* Text-based colored statuses: hoạt động -> green, tạm ngưng -> orange, dừng hoạt động -> red */}
-                        <span style={{ color: badgeColor, fontSize: 12, fontWeight: 700 }}>
-                          ● {badgeText}
-                        </span>
                       </td>
                       <td style={{ padding: "8px 6px", whiteSpace: "nowrap" }}>
                         <div style={{ display: "flex", gap: 3, justifyContent: "center", flexWrap: "nowrap" }}>
@@ -587,6 +651,10 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
                 </div>
               </div>
               <div>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Năng lực:</span>
+                <div style={{ marginTop: 4 }}>{getCompetenceBadge(ctvDetailPopup.competence)}</div>
+              </div>
+              <div>
                 <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Cán bộ quản lý:</span>
                 <div style={{ fontSize: 14, color: "#334155", fontWeight: 600 }}>{ctvDetailPopup.managing_officer || "—"}</div>
               </div>
@@ -692,7 +760,7 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
   const [form, setForm] = useState({
     ma_so: "",
     nickname: "",
-    classification: "CS",
+    classification: "CSBM",
     address: "",
     phone: "",
     managing_officer: "",
@@ -700,6 +768,7 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
     lng: "107.5909",
     coverage_radius: "500",
     status: "hoat_dong",
+    competence: "Khá",
     ghi_chu: ""
   });
 
@@ -708,7 +777,7 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
       setForm({
         ma_so: item.ma_so || "",
         nickname: item.nickname || "",
-        classification: item.classification || "CS",
+        classification: item.classification || "CSBM",
         address: item.address || "",
         phone: item.phone || "",
         managing_officer: item.managing_officer || "",
@@ -716,6 +785,7 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
         lng: String(item.lng || "107.5909"),
         coverage_radius: String(item.coverage_radius || "500"),
         status: item.status || "hoat_dong",
+        competence: item.competence || "Khá",
         ghi_chu: item.ghi_chu || ""
       });
     } else {
@@ -848,7 +918,7 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
         </FormField>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
         <FormField label="Cán bộ quản lý phụ trách">
           <select 
             name="managing_officer" 
@@ -860,6 +930,20 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
             {officers.map(o => (
               <option key={o} value={o}>{o}</option>
             ))}
+          </select>
+        </FormField>
+
+        <FormField label="Năng lực">
+          <select 
+            name="competence" 
+            value={form.competence} 
+            onChange={handleChange} 
+            style={selectSt}
+          >
+            <option value="Xuất sắc">Xuất sắc</option>
+            <option value="Tốt">Tốt</option>
+            <option value="Khá">Khá</option>
+            <option value="Kém">Kém</option>
           </select>
         </FormField>
 

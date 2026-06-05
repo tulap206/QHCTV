@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS collaborators (
     lng DOUBLE PRECISION NOT NULL,
     coverage_radius INT NOT NULL DEFAULT 500, -- in meters, for radar scanning area
     status TEXT NOT NULL DEFAULT 'hoat_dong', -- hoat_dong, tam_ngung, dung_hoat_dong
+    competence TEXT NOT NULL DEFAULT 'Khá', -- Xuất sắc, Tốt, Khá, Kém
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     ghi_chu TEXT
 );
@@ -26,9 +27,9 @@ VALUES ('admin', 'Admin@123', 'Quản trị viên', 'Đại úy', 'Admin', 'admi
 ON CONFLICT (username) DO NOTHING;
 
 -- 4. Seed default collaborators in Hue city area
-INSERT INTO collaborators (ma_so, nickname, classification, address, phone, managing_officer, lat, lng, coverage_radius, status, ghi_chu)
+INSERT INTO collaborators (ma_so, nickname, classification, address, phone, managing_officer, lat, lng, coverage_radius, status, competence, ghi_chu)
 VALUES 
-('CTV-001', 'Anh Bảy Chợ Đông Ba', 'CS', 'Chợ Đông Ba, Phú Hòa, Huế', '0905111222', 'Phan Lê Tự Lập', 16.4682, 107.5878, 400, 'hoat_dong', 'Địa bàn hoạt động xung quanh cổng chợ'),
-('CTV-002', 'Chú Sáu Vỹ Dạ', 'ĐT1', 'Phường Vỹ Dạ, TP Huế', '0905333444', 'Dương Văn Thành', 16.4695, 107.6042, 600, 'tam_ngung', 'Theo dõi các tụ điểm karaoke ven sông'),
-('CTV-003', 'Chị Năm An Cựu', 'ĐT2', 'Cầu An Cựu, TP Huế', '0905555666', 'Trương Tuấn Long', 16.4528, 107.5955, 300, 'hoat_dong', 'Địa bàn ga Huế và bến xe phía Nam')
+('CTV-001', 'Anh Bảy Chợ Đông Ba', 'CS', 'Chợ Đông Ba, Phú Hòa, Huế', '0905111222', 'Phan Lê Tự Lập', 16.4682, 107.5878, 400, 'hoat_dong', 'Xuất sắc', 'Địa bàn hoạt động xung quanh cổng chợ'),
+('CTV-002', 'Chú Sáu Vỹ Dạ', 'ĐT1', 'Phường Vỹ Dạ, TP Huế', '0905333444', 'Dương Văn Thành', 16.4695, 107.6042, 600, 'tam_ngung', 'Tốt', 'Theo dõi các tụ điểm karaoke ven sông'),
+('CTV-003', 'Chị Năm An Cựu', 'ĐT2', 'Cầu An Cựu, TP Huế', '0905555666', 'Trương Tuấn Long', 16.4528, 107.5955, 300, 'hoat_dong', 'Khá', 'Địa bàn ga Huế và bến xe phía Nam')
 ON CONFLICT (ma_so) DO NOTHING;
