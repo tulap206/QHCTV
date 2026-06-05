@@ -33,16 +33,26 @@ export async function GET() {
     const parsedId = /^\d+$/.test(String(userId)) ? parseInt(String(userId), 10) : userId;
 
     // Verify user still exists in DB
-    const { data, error } = await supabase
-      .from('qhctv_users')
+    const { data: userData, error: userErr } = await supabase
+      .from('users')
       .select('*')
       .eq('id', parsedId);
 
-    if (error || !data || data.length === 0) {
+    if (userErr || !userData || userData.length === 0) {
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
 
-    return NextResponse.json({ authenticated: true, user: data[0] });
+    let user = userData[0];
+    const { data: qhctvUserData } = await supabase
+      .from('qhctv_users')
+      .select('*')
+      .eq('username', user.username);
+
+    if (qhctvUserData && qhctvUserData.length > 0) {
+      user = { ...user, ...qhctvUserData[0] };
+    }
+
+    return NextResponse.json({ authenticated: true, user });
   } catch (error) {
     return NextResponse.json({ authenticated: false, error: error.message }, { status: 500 });
   }
@@ -57,18 +67,50 @@ export async function POST(request) {
       return NextResponse.json({ error: "Vui lòng nhập tên đăng nhập và mật khẩu!" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    // First check qhctv_users for local override
+    const { data: qhctvData, error: qhctvErr } = await supabase
       .from('qhctv_users')
       .select('*')
       .eq('username', username.trim())
       .eq('password', password.trim());
 
-    if (error) {
-      return NextResponse.json({ error: "Lỗi kết nối cơ sở dữ liệu!" }, { status: 500 });
+    let user = null;
+    if (!qhctvErr && qhctvData && qhctvData.length > 0) {
+      // Found local override with correct password
+      const localOverride = qhctvData[0];
+      // Get main profile from users
+      const { data: mainData } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', username.trim());
+      
+      user = mainData && mainData.length > 0 ? { ...mainData[0], ...localOverride } : localOverride;
+    } else {
+      // Check main users table
+      const { data: mainData, error: mainErr } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', username.trim())
+        .eq('password', password.trim());
+      
+      if (mainErr) {
+        return NextResponse.json({ error: "Lỗi kết nối cơ sở dữ liệu!" }, { status: 500 });
+      }
+
+      if (mainData && mainData.length > 0) {
+        user = mainData[0];
+        // If there's an override in qhctv_users but the password check was correct against main table, merge it
+        const { data: localData } = await supabase
+          .from('qhctv_users')
+          .select('*')
+          .eq('username', username.trim());
+        if (localData && localData.length > 0) {
+          user = { ...user, ...localData[0] };
+        }
+      }
     }
 
-    if (data && data.length > 0) {
-      const user = data[0];
+    if (user) {
       const serializedUser = String(user.id);
 
       const cookieStore = await cookies();

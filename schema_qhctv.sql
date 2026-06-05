@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS collaborators (
     khu_vuc_hoat_dong TEXT,
     giao_nhiem_vu TEXT,
     ket_qua TEXT,
+    created_date TEXT, -- YYYY-MM-DD
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     ghi_chu TEXT
 );

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, Component } from 'react';
 import dynamic from 'next/dynamic';
-import { Modal, FormField, exportToPrint, exportToWord, getShortName } from '@/app/components/shared';
+import { Modal, FormField, exportToPrint, exportToWord, getShortName, UserAvatar, formatVNdate } from '@/app/components/shared';
 import { RankBadge } from '@/app/components/shared';
 
 // Dynamically import LeafletMap with ssr disabled to prevent document/window undefined errors
@@ -134,7 +134,8 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
       competence: item.competence || "Khá",
       khu_vuc_hoat_dong: item.khu_vuc_hoat_dong || "",
       giao_nhiem_vu: item.giao_nhiem_vu || "",
-      ket_qua: item.ket_qua || ""
+      ket_qua: item.ket_qua || "",
+      created_date: item.created_date || ""
     }));
   }, [data["collaborators"]]);
 
@@ -230,7 +231,8 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
       competence: form.competence || "Khá",
       khu_vuc_hoat_dong: form.khu_vuc_hoat_dong || "",
       giao_nhiem_vu: form.giao_nhiem_vu || "",
-      ket_qua: form.ket_qua || ""
+      ket_qua: form.ket_qua || "",
+      created_date: form.created_date || ""
     };
     
     let nd;
@@ -507,16 +509,17 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
                       <td style={{ padding: "10px 16px", textAlign: "center" }}>
                         {getCompetenceBadge(item.competence)}
                       </td>
-                      <td style={{ padding: "10px 16px" }}>
+                      <td style={{ padding: "10px 16px", whiteSpace: "nowrap" }}>
                         {item.managing_officer ? (
-                          <span 
+                          <button
                             onClick={() => handleCanBoClick(item.managing_officer)}
-                            style={{ cursor: "pointer", fontWeight: 600, color: "#3B82F6", fontSize: 12 }}
+                            style={{ border: "none", background: "none", color: "#3B82F6", cursor: "pointer", fontSize: 11, fontWeight: 600, padding: 0, display: "flex", alignItems: "center", gap: 4 }}
                           >
-                            {getShortName(item.managing_officer)}
-                          </span>
+                            <UserAvatar user={users.find(u => u.name === item.managing_officer) || { name: item.managing_officer, role: "viewer" }} size={22} />
+                            <span style={{ maxWidth: 105, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{getShortName(item.managing_officer)}</span>
+                          </button>
                         ) : (
-                          <span style={{ color: "#94A3B8", fontSize: 12 }}>Chưa phân công</span>
+                          <span style={{ color: "#CBD5E1", fontSize: 11 }}>Chưa phân công</span>
                         )}
                       </td>
                       <td style={{ padding: "8px 6px", whiteSpace: "nowrap" }}>
@@ -682,6 +685,10 @@ function CollaboratorViewInner({ data, onDataChange, currentUser, addLog, users,
                 <div style={{ marginTop: 4 }}>{getCompetenceBadge(ctvDetailPopup.competence)}</div>
               </div>
               <div>
+                <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Thời gian xây dựng:</span>
+                <div style={{ fontSize: 14, color: "#334155", fontWeight: 600 }}>{ctvDetailPopup.created_date ? formatVNdate(ctvDetailPopup.created_date) : "—"}</div>
+              </div>
+              <div>
                 <span style={{ fontSize: 11, color: "#64748B", fontWeight: 700, textTransform: "uppercase" }}>Cán bộ quản lý:</span>
                 <div style={{ fontSize: 14, color: "#334155", fontWeight: 600 }}>{ctvDetailPopup.managing_officer || "—"}</div>
               </div>
@@ -815,6 +822,7 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
     khu_vuc_hoat_dong: "",
     giao_nhiem_vu: "",
     ket_qua: "",
+    created_date: new Date().toISOString().split('T')[0],
     ghi_chu: ""
   });
 
@@ -862,6 +870,7 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
         khu_vuc_hoat_dong: item.khu_vuc_hoat_dong || "",
         giao_nhiem_vu: item.giao_nhiem_vu || "",
         ket_qua: item.ket_qua || "",
+        created_date: item.created_date || new Date().toISOString().split('T')[0],
         ghi_chu: item.ghi_chu || ""
       });
     } else {
@@ -869,7 +878,8 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
       const nextCode = String(lastCode).padStart(3, "0");
       setForm(prev => ({
         ...prev,
-        ma_so: `CTV-${year}-${nextCode}`
+        ma_so: `CTV-${year}-${nextCode}`,
+        created_date: new Date().toISOString().split('T')[0]
       }));
     }
   }, [item, lastCode]);
@@ -1017,7 +1027,7 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
         </FormField>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <FormField label="Cán bộ quản lý phụ trách">
           <select 
             name="managing_officer" 
@@ -1045,7 +1055,9 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
             <option value="Kém">Kém</option>
           </select>
         </FormField>
+      </div>
 
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <FormField label="Trạng thái quy hoạch">
           <select 
             name="status" 
@@ -1057,6 +1069,17 @@ function CollaboratorForm({ item, officers, onSave, onCancel, lastCode }) {
               <option key={s.value} value={s.value}>{s.label}</option>
             ))}
           </select>
+        </FormField>
+
+        <FormField label="Thời gian xây dựng (Quy hoạch)" required>
+          <input 
+            type="date"
+            name="created_date" 
+            value={form.created_date} 
+            onChange={handleChange} 
+            required 
+            style={inputSt} 
+          />
         </FormField>
       </div>
 

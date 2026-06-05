@@ -53,6 +53,21 @@ export default function Home() {
 
   // Core collections
   const [users, setUsers] = useState([]);
+  const loadUsers = async () => {
+    try {
+      const { data: dbUsers, error: usersErr } = await supabase.from('users').select('*');
+      const { data: qhctvUsers } = await supabase.from('qhctv_users').select('*');
+      if (!usersErr && dbUsers) {
+        const merged = dbUsers.map(u => {
+          const override = qhctvUsers?.find(qo => qo.username === u.username);
+          return override ? { ...u, ...override } : u;
+        });
+        setUsers(merged);
+      }
+    } catch (e) {
+      console.error("Error loading users:", e);
+    }
+  };
   const [departments, setDepartments] = useState([]);
   const [logs, setLogs] = useState([]);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
@@ -120,8 +135,7 @@ export default function Home() {
     const loadAllData = async () => {
       try {
         // Fetch users
-        const { data: dbUsers, error: usersErr } = await supabase.from('qhctv_users').select('*');
-        if (!usersErr && dbUsers) setUsers(dbUsers);
+        await loadUsers();
         
         // Fetch departments
         const { data: dbDepts, error: deptsErr } = await supabase.from('departments').select('*');
@@ -223,18 +237,18 @@ export default function Home() {
         .subscribe();
     });
 
-    // Listen for changes to users table
+    // Listen for changes to users table (both users and qhctv_users local overrides)
     const usersChannel = supabase
+      .channel('realtime:users')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+        loadUsers();
+      })
+      .subscribe();
+
+    const qhctvUsersChannel = supabase
       .channel('realtime:qhctv_users')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'qhctv_users' }, (payload) => {
-        const { eventType, new: newRow, old: oldRow } = payload;
-        if (eventType === 'INSERT') {
-          setUsers(prev => prev.some(u => u.id === newRow.id) ? prev : [...prev, newRow]);
-        } else if (eventType === 'UPDATE') {
-          setUsers(prev => prev.map(u => u.id === newRow.id ? newRow : u));
-        } else if (eventType === 'DELETE') {
-          setUsers(prev => prev.filter(u => u.id !== oldRow.id));
-        }
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'qhctv_users' }, () => {
+        loadUsers();
       })
       .subscribe();
 
@@ -622,7 +636,6 @@ export default function Home() {
   const navItems = [
     { id: "dashboard", icon: "🏠", label: "Tổng quan" },
     { id: "collaborators", icon: "👥", label: "Quản lý CTV" },
-    { id: "users", icon: "👮", label: "Quản lý cán bộ" },
     { id: "sao_luu_ls", icon: "🗂️", label: "Lịch sử - Sao lưu" }
   ];
 
